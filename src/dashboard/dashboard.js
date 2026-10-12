@@ -156,7 +156,7 @@
 
   function renderAiSummary(cfg) {
     const c = cfg || MN.ai.normalizeConfig(null);
-    dom.aiSummary.textContent = c.enabled ? `已开启 · ${c.model}` : '未开启';
+    dom.aiSummary.textContent = c.enabled ? `已开启 · ${c.model || '还没选模型'}` : '未开启';
   }
 
   function aiStatus(msg, kind) {
@@ -225,6 +225,24 @@
     } finally {
       dom.aiListModels.disabled = false;
     }
+  }
+
+  // 用户在「打开 AI 分析」上亲手点过之后，就以他的选择为准，下面不再替他勾。
+  let aiEnableTouched = false;
+
+  /**
+   * 填了 API Key 就顺手把「打开 AI 分析」勾上，省掉「保存 → 发现没开 → 再保存一次」。
+   * 只往勾选方向走，绝不自动取消：用户在开关上做过的选择优先。
+   * 也刻意不做「保存时兜底」——万一某个浏览器自动填充不发事件，宁可少勾一次（用户自己补一下），
+   * 也不要在他只想改别的设置时，把放着 Key 却一直关着的 AI 悄悄打开。
+   * @returns {boolean} 这次是否真的替他勾上了
+   */
+  function autoEnableOnKey() {
+    if (aiEnableTouched || dom.aiEnabled.checked || !dom.aiKey.value.trim()) return false;
+    dom.aiEnabled.checked = true;
+    renderAiSummary(readAiForm());
+    aiStatus('填好 Key 了，已经顺手勾上「打开 AI 分析」—— 点「保存 AI 设置」生效');
+    return true;
   }
 
   function bindAi() {
@@ -304,7 +322,15 @@
       aiStatus('Key 已清除', 'ok');
     });
 
+    // 程序性赋值（fillAi 回填设置）不会触发 change，所以这里只记录用户亲手点的动作
+    dom.aiEnabled.addEventListener('change', () => {
+      aiEnableTouched = true;
+    });
+
+    // input 覆盖打字、粘贴、拖放；change 再兜一次（失焦提交、部分浏览器的自动填充）
+    dom.aiKey.addEventListener('input', autoEnableOnKey);
     dom.aiKey.addEventListener('change', () => {
+      if (autoEnableOnKey()) return; // 已经给过更具体的提示，别覆盖掉
       aiStatus(dom.aiKey.value.trim() ? '记得点「保存 AI 设置」' : '');
     });
   }

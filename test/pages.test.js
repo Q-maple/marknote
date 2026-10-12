@@ -482,6 +482,44 @@ function check(name, cond, extra) {
     check('清除后把模型标签也收掉', modelsBox.querySelectorAll('button').length === 0);
   }
 
+  console.log('\n[6b] 管理页：填了 API Key 就自动勾上「打开 AI 分析」');
+  {
+    const data = clone(SEED);
+    const { dom, doc, errors } = await openPage('src/dashboard/dashboard.html', data);
+    check('没有脚本错误', errors.length === 0, errors.join(' | '));
+    const field = (id) => doc.getElementById(id);
+    check('什么都没填时依然默认关着（默认值没被改）', field('ai-enabled').checked === false);
+    check('初始摘要还是未开启', field('ai-summary').textContent.includes('未开启'), field('ai-summary').textContent);
+
+    // 保存 Key 时后台要配合返回模型列表
+    dom.window.chrome.runtime.sendMessage = (msg, cb) => {
+      const res = { ok: true, models: ['deepseek-chat'] };
+      if (typeof cb === 'function') setTimeout(() => cb(res), 0);
+      return Promise.resolve(res);
+    };
+
+    // 1) 往 Key 框里打字 / 粘贴 → 开关自动勾上
+    field('ai-key').value = 'sk-auto-abcdef123456';
+    field('ai-key').dispatchEvent(dom2Event(doc, 'input'));
+    check('填了 Key 自动勾上开关', field('ai-enabled').checked === true);
+    check('折叠标题立刻变成已开启', field('ai-summary').textContent.includes('已开启'), field('ai-summary').textContent);
+    check('提示里说清了是顺手勾的', field('ai-status').textContent.includes('顺手勾上'), field('ai-status').textContent);
+
+    // 2) 自动勾上的状态保存后真的落盘，不用再手动勾一次
+    field('ai-save').dispatchEvent(dom2Event(doc, 'click'));
+    await sleep(140);
+    check('自动勾上后保存，enabled 落盘为 true', data.settings.ai && data.settings.ai.enabled === true,
+      JSON.stringify(data.settings.ai));
+    check('Key 也存进去了', data.aiKey === 'sk-auto-abcdef123456', JSON.stringify(data.aiKey));
+
+    // 3) 用户亲手取消勾选后，再改 Key 不再强行勾回来
+    field('ai-enabled').checked = false;
+    field('ai-enabled').dispatchEvent(dom2Event(doc, 'change'));
+    field('ai-key').value = 'sk-auto-2';
+    field('ai-key').dispatchEvent(dom2Event(doc, 'input'));
+    check('取消勾选后就不再自动勾回来（以用户选择为准）', field('ai-enabled').checked === false);
+  }
+
   console.log('\n[7] 侧边栏：序号与清空入口');
   {
     // startV 顺序和创建时间顺序故意反着来，验证两种排序
