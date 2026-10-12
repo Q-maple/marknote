@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "MarkNote · 网页划线高亮批注",
-  "version": "1.6.1",
+  "version": "1.6.2",
   "description": "免费的网页划线、高亮、批注与笔记工具：多色高亮 + 自定义颜色（色环 / RGB）、可选的第三方 AI（智能标注 / 划线对话悬浮窗，自己填 API Key，默认关闭）、无限层级标签、侧边栏清单、Markdown/JSON 导出。数据默认只保存在本机。",
   "browser_specific_settings": {
     "gecko": {

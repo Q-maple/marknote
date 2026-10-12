@@ -4,7 +4,7 @@
 [GitHub Releases](https://github.com/Q-maple/marknote/releases) 上
 （`dist/` 是 `tools/build.sh` 的构建产物，不入库）。
 
-## 未发布
+## 1.6.2
 
 填 API Key 的时候顺手把 AI 打开，省掉「保存 → 发现没开 → 再勾一次再保存」这一步。
 

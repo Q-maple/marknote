@@ -7,7 +7,7 @@ Manifest V3，同时在 **Firefox** 和 **Chrome / Edge / Brave** 上可用。
 > 五彩是「保留所有权利」的闭源扩展，所以这里没有使用它的任何代码、图标或品牌名——只是把它的功能点重新实现了一遍，
 > 并去掉了它的云端同步（改成纯本地 + JSON 备份）。详见文末「与五彩的关系」。
 
-当前版本 **1.6.1**，各版本改了什么看 [CHANGELOG.md](CHANGELOG.md)。
+当前版本 **1.6.2**，各版本改了什么看 [CHANGELOG.md](CHANGELOG.md)。
 
 **仓库**：<https://github.com/Q-maple/marknote> · **下载安装包**：[Releases](https://github.com/Q-maple/marknote/releases/latest)
 
