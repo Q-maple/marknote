@@ -1,0 +1,227 @@
+/* MarkNote — 扩展页面（侧边栏 / 管理页 / 弹窗）共用样式 */
+
+:root {
+  --mn-bg: #ffffff;
+  --mn-fg: #1f2937;
+  --mn-muted: #6b7280;
+  --mn-line: rgba(15, 23, 42, 0.12);
+  --mn-soft: rgba(15, 23, 42, 0.05);
+  --mn-accent: #3b5bdb;
+  --mn-danger: #e03131;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --mn-bg: #171a21;
+    --mn-fg: #e5e7eb;
+    --mn-muted: #9ca3af;
+    --mn-line: rgba(255, 255, 255, 0.14);
+    --mn-soft: rgba(255, 255, 255, 0.07);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--mn-bg);
+  color: var(--mn-fg);
+  font: 13px/1.55 -apple-system, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+}
+
+body {
+  padding: 12px;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: 650;
+}
+
+a {
+  color: var(--mn-accent);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border-radius: 7px;
+  border: 1px solid var(--mn-line);
+  background: transparent;
+  padding: 5px 10px;
+}
+
+button:hover {
+  background: var(--mn-soft);
+}
+
+button.primary {
+  background: var(--mn-accent);
+  border-color: transparent;
+  color: #fff;
+  font-weight: 600;
+}
+
+button.primary:hover {
+  filter: brightness(1.06);
+}
+
+button.danger {
+  color: var(--mn-danger);
+  border-color: rgba(224, 49, 49, 0.45);
+}
+
+input,
+select,
+textarea {
+  border: 1px solid var(--mn-line);
+  background: transparent;
+  border-radius: 7px;
+  padding: 6px 9px;
+  width: 100%;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid rgba(59, 91, 219, 0.45);
+  border-color: transparent;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.row.wrap {
+  flex-wrap: wrap;
+}
+
+.grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.muted {
+  color: var(--mn-muted);
+  font-size: 12px;
+}
+
+.card {
+  border: 1px solid var(--mn-line);
+  border-radius: 10px;
+  padding: 10px;
+  background: var(--mn-bg);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgba(59, 91, 219, 0.14);
+  font-size: 11.5px;
+}
+
+.chip button {
+  border: none;
+  padding: 0 2px;
+  background: none;
+  opacity: 0.6;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: none;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.14);
+}
+
+.sep {
+  width: 1px;
+  align-self: stretch;
+  background: var(--mn-line);
+  margin: 0 2px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.ann {
+  border: 1px solid var(--mn-line);
+  border-left-width: 4px;
+  border-radius: 9px;
+  padding: 9px 10px;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.ann:hover {
+  background: var(--mn-soft);
+}
+
+.ann.lost {
+  opacity: 0.72;
+  border-left-color: var(--mn-muted) !important;
+}
+
+.ann-quote {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.ann-note {
+  margin-top: 5px;
+  padding-left: 8px;
+  border-left: 2px solid var(--mn-line);
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--mn-fg);
+  opacity: 0.88;
+}
+
+.ann-meta {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-size: 11.5px;
+  color: var(--mn-muted);
+}
+
+.empty {
+  text-align: center;
+  color: var(--mn-muted);
+  padding: 28px 12px;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--mn-soft);
+  border-radius: 8px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}

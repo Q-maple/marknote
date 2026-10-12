@@ -1,0 +1,79 @@
+body {
+  width: 400px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.grid button {
+  padding: 8px 6px;
+  font-size: 12.5px;
+}
+
+.dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+
+.dot[data-active='1'] {
+  border-color: var(--mn-accent);
+}
+
+#colors .dot {
+  flex: none;
+}
+
+#colors {
+  gap: 8px;
+}
+
+#add-custom {
+  width: 100%;
+  font-size: 12.5px;
+  padding: 6px;
+}
+
+#picker-host {
+  margin-top: 8px;
+  display: flex;
+  justify-content: center;
+}
+
+#custom-colors {
+  gap: 6px;
+  min-height: 22px;
+}
+
+#custom-colors .chip {
+  cursor: pointer;
+}
+
+#custom-colors .chip .dot {
+  width: 12px;
+  height: 12px;
+  border-width: 2px;
+  cursor: pointer;
+}
+
+footer {
+  font-size: 11.5px;
+  line-height: 1.5;
+  border-top: 1px solid var(--mn-line);
+  padding-top: 8px;
+}

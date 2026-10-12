@@ -1,0 +1,650 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>MarkNote · AI 分析面板预览</title>
+    <style>
+      body {
+        margin: 0;
+        font: 15px/1.75 -apple-system, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+        color: #1f2937;
+        background: #fbfbfd;
+      }
+      .demo-bar {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+        padding: 10px 18px;
+        background: #fff;
+        border-bottom: 1px solid rgba(15, 23, 42, 0.1);
+        font-size: 13px;
+      }
+      .demo-bar b {
+        margin-right: 4px;
+      }
+      .demo-bar button {
+        font: inherit;
+        font-size: 12.5px;
+        padding: 5px 11px;
+        border-radius: 7px;
+        border: 1px solid rgba(15, 23, 42, 0.16);
+        background: transparent;
+        cursor: pointer;
+      }
+      .demo-bar button:hover {
+        background: rgba(15, 23, 42, 0.05);
+      }
+      .demo-bar .note {
+        color: #6b7280;
+      }
+      article {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 26px 18px 120px;
+      }
+      h2 {
+        font-size: 20px;
+      }
+      footer {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 0 18px 60px;
+        color: #6b7280;
+        font-size: 12.5px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 这一页只是「看一眼 AI 面板长什么样」，用假的扩展 API 把 content.js 跑起来。
+         真正的扩展里，请求由后台脚本代发到你自己配置的接口。 -->
+    <div class="demo-bar">
+      <b>演示：</b>
+      <button id="demo-selection">选中一段文字并打开 AI 面板</button>
+      <button id="demo-page">按整页正文打开</button>
+      <button id="demo-noconfig">看「还没配置」的样子</button>
+      <button id="demo-index">高亮序号开 / 关</button>
+      <button id="demo-clear">清空本页（可撤销）</button>
+      <button id="demo-talk">AI 对话悬浮窗</button>
+      <button id="demo-models">切换模型</button>
+      <span class="note" id="demo-hint">（演示数据是写死的，不会真的联网）</span>
+    </div>
+
+    <article>
+      <h2>为什么浏览器扩展的存储要按条拆开写</h2>
+      <p id="t1">
+        Manifest V3 的扩展把数据放在 chrome.storage.local 里，它本质上是一个键值对仓库。很多人在做划线类扩展时，
+        习惯把所有划线塞进一个数组，再整体读、整体写。数据量小的时候看不出问题，一旦划线超过几千条，
+        每次改动都要序列化整个数组，写入延迟会从几毫秒涨到几百毫秒，页面还会因为并发写入互相覆盖。
+      </p>
+      <p id="t2">
+        更稳的做法是一条划线一个键，比如 ann:&lt;id&gt;，内存里只保留一份 id 到划线的映射。
+        这样单次写入只动一条记录，耗时和数据总量无关；导出备份时把所有键读出来拼成一个数组即可，
+        导入时再按 id 去重合并，成本都在用户主动点击的那一下。
+      </p>
+      <p id="t3">
+        另一个容易被忽略的点是定位。网页的 DOM 随时可能被脚本改写，只存偏移量非常脆弱。
+        把「选中的文字 + 前后各 40 字上下文 + 虚拟文本偏移」一起存下来，还原时按由强到弱的顺序回退尝试，
+        才能在页面改版之后仍然把高亮找回来。
+      </p>
+      <p id="t4">
+        最后是容量：chrome.storage.local 默认只有 10MB，因为图片标记也会占用空间，
+        所以清单里必须声明 unlimitedStorage，否则用户划到一定量之后会遇到写入失败。
+      </p>
+    </article>
+
+    <footer>
+      这是 <code>docs/ai-preview.html</code>：直接加载真实的 <code>src/content/content.js</code>，只把扩展 API 换成假的，
+      所以面板的样式、交互和装到浏览器里看到的是同一份代码。
+    </footer>
+
+    <script>
+      /* 演示页的报错收集：出问题时能在页面底部看到原因，而不是白屏 */
+      window.__errors = [];
+      window.addEventListener('error', function (e) {
+        window.__errors.push('error: ' + (e.message || e.type));
+      });
+      window.addEventListener('unhandledrejection', function (e) {
+        var r = e.reason;
+        window.__errors.push('reject: ' + ((r && (r.message || r.name)) || r));
+      });
+      /* ---- 假的扩展 API：够 content.js 跑起来就行 ---- */
+      (function () {
+        var data = {
+          settings: {
+            defaultColor: 'yellow',
+            showToolbar: true,
+            showSideBar: true,
+            customColors: [],
+            markdownTemplate: 'quote',
+            ai: {
+              enabled: true,
+              baseUrl: 'https://api.deepseek.com',
+              model: 'deepseek-chat',
+              maxItems: 10,
+              prompt: '演示用的默认提示词'
+            }
+          }
+        };
+        var changes = [];
+        var listen = function (fn) {
+          changes.push(fn);
+        };
+        var clone = function (v) {
+          return JSON.parse(JSON.stringify(v));
+        };
+
+        // 演示用的「模型返回」：前两条能在正文里找到，第三条故意找不到
+        var FAKE_ITEMS = [
+          {
+            quote: '一条划线一个键',
+            color: 'yellow',
+            note: '核心结论：按条存储，写入成本和总量无关',
+            reason: '结论'
+          },
+          {
+            quote: '把「选中的文字 + 前后各 40 字上下文 + 虚拟文本偏移」一起存下来',
+            color: 'green',
+            note: '定位三要素，页面改版后靠这个回退找回',
+            reason: '方法'
+          },
+          {
+            quote: '这一段在正文里根本没有出现过',
+            color: 'blue',
+            note: '演示「页面上找不到原文」的样子',
+            reason: ''
+          }
+        ];
+
+        function sendMessage(msg, cb) {
+          var res = null;
+          if (msg && msg.type === 'mn:ai-chat') {
+            res = /[?&]mode=err/.test(location.search)
+              ? {
+                  ok: false,
+                  code: 'http',
+                  // 拿真实报错当样例：模型名不对 + 自动附上的可用模型
+                  error:
+                    'The supported API model names are deepseek-flash, deepseek-v4-pro, but you passed deepseek-v4.1-flash.（这个接口可用的模型：deepseek-flash、deepseek-v4-pro —— 到管理页「AI 分析」里把模型改成其中一个）',
+                  models: ['deepseek-flash', 'deepseek-v4-pro']
+                }
+              : {
+                  ok: true,
+                  model: 'deepseek-chat',
+                  usage: { total_tokens: 486 },
+                  items: FAKE_ITEMS
+                };
+          } else if (msg && msg.type === 'mn:ai-talk') {
+            var hist = (msg.payload && msg.payload.history) || [];
+            var n = hist.filter(function (m) { return m.role === 'user'; }).length;
+            res = /[?&]mode=err/.test(location.search)
+              ? { ok: false, code: 'http', error: 'Insufficient Balance（余额不足，去 DeepSeek 充值后再试）' }
+              : {
+                  ok: true,
+                  model: 'deepseek-chat',
+                  usage: { total_tokens: 132 },
+                  reply:
+                    '第 ' + n + ' 轮的回答：这句话说的是**同比增长 18%**，主要来自海外市场。\n\n' +
+                    '- 时间范围：第二季度\n- 对比对象：去年同期\n\n要我接着算一下环比吗？'
+                };
+          } else if (msg && msg.type === 'mn:ai-models') {
+            res = /[?&]mode=err/.test(location.search)
+              ? { ok: false, code: 'nokey', error: '还没有配置 API Key' }
+              : { ok: true, models: ['deepseek-chat', 'deepseek-reasoner', 'doubao-seed-1-6-250615'] };
+          } else if (msg && msg.type === 'mn:ai-test') {
+            res = { ok: true, model: 'deepseek-chat', reply: '可用' };
+          } else {
+            res = { ok: true };
+          }
+          var wait = msg && (msg.type === 'mn:ai-chat' || msg.type === 'mn:ai-talk') ? 450 : 0; // 让「正在想…」的状态也能看到
+          if (typeof cb === 'function') setTimeout(function () { cb(clone(res)); }, wait);
+          return new Promise(function (resolve) {
+            setTimeout(function () { resolve(clone(res)); }, wait);
+          });
+        }
+
+        var msgListeners = [];
+
+        var chrome = {
+          runtime: {
+            lastError: null,
+            getManifest: function () { return { version: '1.3.1-demo' }; },
+            getURL: function (p) { return p; },
+            sendMessage: sendMessage,
+            onMessage: {
+              addListener: function (fn) {
+                msgListeners.push(fn);
+              }
+            }
+          },
+          storage: {
+            local: {
+              get: function (keys, cb) {
+                var out = {};
+                if (keys === null || keys === undefined) out = clone(data);
+                else if (typeof keys === 'string') out = keys in data ? { [keys]: clone(data[keys]) } : {};
+                else if (Array.isArray(keys)) keys.forEach(function (k) { if (k in data) out[k] = clone(data[k]); });
+                else Object.keys(keys).forEach(function (k) { out[k] = k in data ? clone(data[k]) : keys[k]; });
+                if (typeof cb === 'function') setTimeout(function () { cb(out); }, 0);
+                return Promise.resolve(out);
+              },
+              set: function (obj, cb) {
+                Object.assign(data, clone(obj));
+                setTimeout(function () { cb && cb(); }, 0);
+                return Promise.resolve();
+              },
+              remove: function (keys, cb) {
+                (Array.isArray(keys) ? keys : [keys]).forEach(function (k) { delete data[k]; });
+                if (typeof cb === 'function') setTimeout(cb, 0);
+                return Promise.resolve();
+              }
+            },
+            onChanged: { addListener: function () {}, removeListener: function () {} }
+          },
+          tabs: {
+            query: function (q, cb) {
+              var list = [{ id: 1, url: location.href, title: document.title, active: true }];
+              if (typeof q === 'function') return q(list);
+              if (typeof cb === 'function') setTimeout(function () { cb(list); }, 0);
+              return Promise.resolve(list);
+            },
+            sendMessage: function () { return Promise.resolve(null); },
+            create: function () { return Promise.resolve({ id: 2 }); },
+            onActivated: { addListener: function () {} },
+            onUpdated: { addListener: function () {} }
+          },
+          windows: { create: function () { return Promise.resolve({ id: 1 }); }, update: function () { return Promise.resolve(); }, onRemoved: { addListener: function () {} } }
+        };
+        window.chrome = chrome;
+        window.__demo = {
+          data: data,
+          setAi: function (patch) {
+            Object.assign(data.settings.ai, patch);
+          },
+          /** 直接给内容脚本发消息，等于扩展里从弹窗/侧栏发过来的那条。 */
+          send: function (msg) {
+            return new Promise(function (resolve) {
+              var fn = msgListeners[msgListeners.length - 1];
+              if (!fn) return resolve(null);
+              var done = false;
+              var reply = function (r) {
+                if (done) return;
+                done = true;
+                resolve(r);
+              };
+              fn(msg, {}, reply);
+              setTimeout(function () {
+                reply(null);
+              }, 2000);
+            });
+          },
+          settings: data.settings
+        };
+      })();
+    </script>
+
+    <link rel="stylesheet" href="../src/content/content.css" />
+
+    <script src="../src/common/util.js"></script>
+    <script src="../src/common/store.js"></script>
+    <script src="../src/common/anchors.js"></script>
+    <script src="../src/common/picker.js"></script>
+    <script src="../src/common/ai.js"></script>
+    <script src="../src/content/content.js"></script>
+
+    <script>
+      (function () {
+        'use strict';
+        var sleep = function (ms) {
+          return new Promise(function (r) { setTimeout(r, ms); });
+        };
+        function shadow() {
+          var host = document.getElementById('marknote-host');
+          return host && host.shadowRoot;
+        }
+        function selectText(node, start, end) {
+          var range = document.createRange();
+          range.setStart(node, start);
+          range.setEnd(node, end);
+          var sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+          document.body.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+        }
+        async function openPanel(scope) {
+          var sr = shadow();
+          if (!sr) return;
+          if (scope !== 'page') {
+            var p = document.getElementById('t2');
+            selectText(p.firstChild, 0, 24);
+            await sleep(80);
+            var btn = sr.querySelector('.mn-toolbar [data-act="ai"]');
+            if (btn) btn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+          } else {
+            sr.querySelector('.mn-side [data-act="ai"]').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+          }
+        }
+        async function run() {
+          await sleep(80);
+          var sr = shadow();
+          var runBtn = sr.querySelector('.mn-ai [data-ai="run"]');
+          if (runBtn) runBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        }
+
+        document.getElementById('demo-selection').addEventListener('click', async function () {
+          window.__demo.setAi({ enabled: true, prompt: '' });
+          await openPanel('selection');
+          run();
+        });
+        document.getElementById('demo-page').addEventListener('click', async function () {
+          window.__demo.setAi({ enabled: true });
+          await openPanel('page');
+          run();
+        });
+        document.getElementById('demo-noconfig').addEventListener('click', async function () {
+          window.__demo.setAi({ enabled: false });
+          await openPanel('page');
+        });
+
+        /** 选中某段文字并点一个颜色，等于用户手动划线。 */
+        async function highlight(sel, from, to) {
+          var sr = shadow();
+          var p = document.querySelector(sel);
+          var range = document.createRange();
+          range.setStart(p.firstChild, from);
+          range.setEnd(p.firstChild, to);
+          var s = window.getSelection();
+          s.removeAllRanges();
+          s.addRange(range);
+          document.body.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+          await sleep(60);
+          var btn = sr.querySelector('.mn-toolbar .mn-dot[data-color="yellow"]');
+          if (btn) btn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+          await sleep(80);
+        }
+
+        async function demoIndex() {
+          if (!document.querySelector('mark.mn-hl')) {
+            await highlight('#t1', 0, 18);
+            await highlight('#t3', 0, 18);
+          }
+          var before = markWidth();
+          var on = window.__demo.settings.showIndex !== true;
+          await window.__demo.send({ type: 'mn:toggle-index' });
+          window.__demo.settings.showIndex = on;
+          await sleep(60);
+          window.__indexDiag = { on: !!on, beforeWidth: before, afterWidth: markWidth() };
+        }
+
+        function markWidth() {
+          var m = document.querySelector('mark.mn-hl');
+          return m ? Math.round(m.getBoundingClientRect().width * 100) / 100 : null;
+        }
+
+        document.getElementById('demo-index').addEventListener('click', function () {
+          demoIndex();
+        });
+        /** 造一段引用 → 打开对话窗 → 发两轮，量一下窗口的真实几何。 */
+        async function demoTalk() {
+          var p = document.querySelector('#t1');
+          var range = document.createRange();
+          range.setStart(p.firstChild, 0);
+          range.setEnd(p.firstChild, 24);
+          var s = window.getSelection();
+          s.removeAllRanges();
+          s.addRange(range);
+          await window.__demo.send({ type: 'mn:ai-talk' });
+          await sleep(80);
+          var win = shadow().querySelector('.mn-talk');
+          var out = { open: !!win && win.hidden === false };
+          if (!win) return out;
+          var box = win.getBoundingClientRect();
+          out.width = Math.round(box.width);
+          out.height = Math.round(box.height);
+          out.left = Math.round(box.left);
+          out.top = Math.round(box.top);
+          out.chip = win.querySelector('.mn-talk-chip') ? win.querySelector('.mn-talk-chip').textContent : '';
+          out.inViewport = box.left >= 0 && box.top >= 0 && box.right <= window.innerWidth + 1 && box.bottom <= window.innerHeight + 1;
+          var ta = win.querySelector('[data-talk-input="q"]');
+          out.prefill = ta.value;
+          out.prefillSelected = ta.selectionStart === 0 && ta.selectionEnd === ta.value.length;
+          out.tipSaysSendDirectly = /直接发送/.test(win.querySelector('.mn-talk-tip').textContent);
+          // 敲一个字：默认提示词应该让位
+          ta.value = ta.value + '为什么？';
+          ta.dispatchEvent(new Event('input', { bubbles: true }));
+          out.afterTyping = ta.value;
+          // 再开一轮，这回什么都不动直接发送
+          win.querySelector('[data-talk="close"]').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+          await sleep(60);
+          await window.__demo.send({ type: 'mn:ai-talk', quote: 'Manifest V3 的扩展' });
+          await sleep(80);
+          win = shadow().querySelector('.mn-talk');
+          var ta0 = win.querySelector('[data-talk-input="q"]');
+          out.prefillAgain = ta0.value;
+          out.sentDefault = null;
+          ta = win.querySelector('[data-talk-input="q"]');
+          ta.value = '这句话什么意思？';
+          ta.dispatchEvent(new Event('input', { bubbles: true }));
+          win.querySelector('[data-talk="send"]').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+          await sleep(700);
+          out.afterTurn1 = win.querySelectorAll('.mn-talk-msg:not(.pending)').length;
+          out.firstBubble = win.querySelector('.mn-talk-msg.user') ? win.querySelector('.mn-talk-msg.user').textContent : '';
+          ta = win.querySelector('[data-talk-input="q"]');
+          ta.value = '那毛利率呢？';
+          ta.dispatchEvent(new Event('input', { bubbles: true }));
+          win.querySelector('[data-talk="send"]').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+          await sleep(700);
+          out.afterTurn2 = win.querySelectorAll('.mn-talk-msg:not(.pending)').length;
+          out.bubbles = win.querySelectorAll('.mn-talk-msg.user').length + '/' + win.querySelectorAll('.mn-talk-msg.assistant:not(.pending)').length;
+          out.hasApply = !!win.querySelector('[data-talk="apply"]');
+          out.bodyScrollable = (function () {
+            var b = win.querySelector('[data-role="talk-msgs"]');
+            return b ? b.scrollHeight >= b.clientHeight : null;
+          })();
+          // 走一遍「工具条 → 对话」这条真实点击路径（jsdom 测过，真机再确认一次）
+          win.querySelector('[data-talk="close"]').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+          await sleep(50);
+          var p2 = document.querySelector('#t3') || document.querySelector('#t1');
+          var r2 = document.createRange();
+          r2.setStart(p2.firstChild, 0);
+          r2.setEnd(p2.firstChild, 18);
+          var s2 = window.getSelection();
+          s2.removeAllRanges();
+          s2.addRange(r2);
+          document.body.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+          await sleep(80);
+          var tb = shadow().querySelector('.mn-toolbar [data-act="talk"]');
+          out.toolbarButton = !!tb;
+          if (tb) {
+            tb.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+            await sleep(80);
+            var win2 = shadow().querySelector('.mn-talk');
+            out.toolbarOpened = !!win2 && win2.hidden === false;
+            out.toolbarQuote = win2 && win2.querySelector('.mn-talk-chip') ? win2.querySelector('.mn-talk-chip').textContent : '';
+            out.toolbarQuoteMatches = !!out.toolbarQuote && out.toolbarQuote.replace(/[「」…]/g, '').length > 3;
+          }
+          win = shadow().querySelector('.mn-talk');
+
+          // 拖一下试试
+          var head = win.querySelector('.mn-talk-head');
+          var down = new MouseEvent('mousedown', { bubbles: true, clientX: box.left + 40, clientY: box.top + 10, button: 0 });
+          head.dispatchEvent(down);
+          document.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 120, clientY: 200 }));
+          document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+          await sleep(60);
+          var box2 = win.getBoundingClientRect();
+          out.draggedTo = Math.round(box2.left) + ',' + Math.round(box2.top);
+          out.stillOpenAfterDrag = win.hidden === false;
+          out.marksOnPage = document.querySelectorAll('mark.mn-hl').length;
+          return out;
+        }
+
+        /** 打开 AI 面板 → 点模型按钮 → 量菜单位置 → 选第二个模型。 */
+        async function demoModels() {
+          await openPanel('selection');
+          var sr = shadow();
+          var btn = sr.querySelector('.mn-ai .mn-model-btn');
+          var out = { button: !!btn, buttonText: btn ? btn.textContent.trim() : '' };
+          if (!btn) return out;
+          btn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+          await sleep(500);
+          var menu = sr.querySelector('.mn-models');
+          out.menuVisible = !!menu && menu.hidden === false;
+          if (!out.menuVisible) return out;
+          var mb = menu.getBoundingClientRect();
+          var bb = btn.getBoundingClientRect();
+          out.menuWidth = Math.round(mb.width);
+          out.items = menu.querySelectorAll('.mn-model-item').length;
+          out.marked = menu.querySelectorAll('.mn-model-item[data-on="1"]').length;
+          out.inViewport = mb.left >= 0 && mb.top >= 0 && mb.right <= window.innerWidth + 1 && mb.bottom <= window.innerHeight + 1;
+          out.underButton = Math.abs(mb.left - bb.left) < 80 && mb.top >= bb.top;
+          var second = menu.querySelectorAll('.mn-model-item')[1];
+          out.picking = second ? second.textContent.trim() : '';
+          if (second) second.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+          await sleep(120);
+          out.buttonAfter = sr.querySelector('.mn-ai .mn-model-btn').textContent.trim();
+          out.menuClosedAfterPick = sr.querySelector('.mn-models').hidden === true;
+          // 注意读 data 里最新的那份：演示用的假 storage 会把整个 settings 换成新对象
+          out.savedModel = window.__demo.data.settings.ai.model;
+          out.promptKept = window.__demo.data.settings.ai.prompt;
+          out.enabledKept = window.__demo.data.settings.ai.enabled;
+          out.marksOnPage = document.querySelectorAll('mark.mn-hl').length;
+          return out;
+        }
+
+        document.getElementById('demo-models').addEventListener('click', async function () {
+          window.__modelsDiag = await demoModels();
+        });
+
+        document.getElementById('demo-talk').addEventListener('click', async function () {
+          window.__talkDiag = await demoTalk();
+        });
+
+        document.getElementById('demo-clear').addEventListener('click', async function () {
+          if (!document.querySelector('mark.mn-hl')) {
+            await highlight('#t1', 0, 18);
+            await highlight('#t3', 0, 18);
+          }
+          var r = await window.__demo.send({ type: 'mn:clear-page' });
+          await sleep(60);
+          var sr = shadow();
+          var undo = sr.querySelector('.mn-toast-act');
+          window.__clearDiag = {
+            result: r,
+            toast: sr.querySelector('.mn-toast').textContent,
+            hasUndo: !!undo,
+            clickable: sr.querySelector('.mn-toast').classList.contains('has-act'),
+            marksLeft: document.querySelectorAll('mark.mn-hl').length
+          };
+          if (/[?&]clear=undo/.test(location.search) && undo) {
+            undo.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+            await sleep(120);
+            window.__clearDiag.marksAfterUndo = document.querySelectorAll('mark.mn-hl').length;
+            window.__clearDiag.toastAfterUndo = sr.querySelector('.mn-toast').textContent;
+          }
+        });
+
+        if (/[?&]auto=1/.test(location.search)) {
+          // 截图 / 自动演示用：直接打开并按整页正文跑一遍
+          setTimeout(async function () {
+            if (/[?&]index=1/.test(location.search)) {
+              await demoIndex();
+            } else if (/[?&]models=/.test(location.search)) {
+              window.__modelsDiag = await demoModels();
+            } else if (/[?&]talk=/.test(location.search)) {
+              window.__talkDiag = await demoTalk();
+            } else if (/[?&]clear=/.test(location.search)) {
+              document.getElementById('demo-clear').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+            } else {
+              window.__demo.setAi({ enabled: true });
+              await openPanel('page');
+              await run();
+            }
+          }, 120);
+        }
+        // diag=1：把面板的真实布局量出来写进 DOM，方便用 --dump-dom 做无头回归检查
+        if (/[?&]diag=1/.test(location.search)) setTimeout(report, 2600);
+
+        /** 把面板的真实布局量出来写进 <pre id="diag">。 */
+        function report() {
+          try {
+            reportInner();
+          } catch (e) {
+            var pre0 = document.createElement('pre');
+            pre0.id = 'diag';
+            pre0.textContent = JSON.stringify(
+              { reportThrew: String((e && e.stack) || e), errors: window.__errors },
+              null,
+              1
+            );
+            document.body.appendChild(pre0);
+          }
+        }
+
+        function reportInner() {
+          var sr = shadow();
+          var panel = sr && sr.querySelector('.mn-ai .mn-ai-status') ? sr.querySelector('.mn-ai') : null;
+          var out = {
+            errors: window.__errors,
+            hostExists: !!document.getElementById('marknote-host'),
+            shadowExists: !!sr,
+            panelExists: !!panel
+          };
+          if (panel) {
+            var box = panel.getBoundingClientRect();
+            var body = panel.querySelector('.mn-ai-body');
+            var list = panel.querySelector('.mn-ai-list');
+            out.open = panel.hidden === false;
+            out.width = Math.round(box.width);
+            out.height = Math.round(box.height);
+            out.centerOffset = Math.round((box.left + box.right) / 2 - window.innerWidth / 2);
+            out.insideViewport =
+              box.top >= 0 && box.bottom <= window.innerHeight && box.left >= 0 && box.right <= window.innerWidth;
+            out.items = panel.querySelectorAll('.mn-ai-item').length;
+            out.checkboxes = panel.querySelectorAll('[data-ai-input="pick"]').length;
+            out.notes = panel.querySelectorAll('[data-ai-input="note"]').length;
+            out.disabledPicks = panel.querySelectorAll('[data-ai-input="pick"][disabled]').length;
+            out.checkedPicks = panel.querySelectorAll('[data-ai-input="pick"]:checked').length;
+            out.badges = panel.querySelectorAll('.mn-ai-badge').length;
+            out.listScrollable = list ? list.scrollHeight > list.clientHeight : null;
+            out.bodyScrollable = body ? body.scrollHeight > body.clientHeight : null;
+            var applyBtn = panel.querySelector('[data-ai="apply"]');
+            out.applyButton = !!applyBtn;
+            out.applyDisabled = applyBtn ? applyBtn.disabled : null;
+            out.status = panel.querySelector('.mn-ai-status').textContent;
+            out.promptPlaceholder = panel.querySelector('[data-ai-input="prompt"]').placeholder.slice(0, 14);
+            var noteInput = panel.querySelector('[data-ai-input="note"]');
+            out.noteFontSize = noteInput ? getComputedStyle(noteInput).fontSize : null;
+            out.setupButton = !!panel.querySelector('[data-ai="setup"]');
+            out.runButton = !!panel.querySelector('[data-ai="run"]');
+            var foot = panel.querySelector('.mn-ai-foot');
+            out.footOverflow = foot
+              ? foot.scrollWidth > foot.clientWidth + 1 || foot.getBoundingClientRect().right > box.right + 1
+              : null;
+            out.statusLines = Math.round(panel.querySelector('.mn-ai-status').getBoundingClientRect().height / 18);
+            out.toast = sr.querySelector('.mn-toast').textContent;
+          }
+          // 序号 / 清空这些演示跟 AI 面板无关，量完统一记在这里
+          if (window.__indexDiag) out.index = window.__indexDiag;
+          if (window.__talkDiag) out.talk = window.__talkDiag;
+          if (window.__modelsDiag) out.models = window.__modelsDiag;
+          if (window.__clearDiag) out.clear = window.__clearDiag;
+          out.marks = document.querySelectorAll('mark.mn-hl').length;
+          var firstMark = document.querySelector('mark.mn-hl');
+          out.markHasIdx = !!(firstMark && firstMark.dataset.idx);
+          out.markIdxValue = firstMark && firstMark.dataset.idx;
+          out.p1Text = document.getElementById('t1') ? document.getElementById('t1').textContent.slice(0, 12) : null;
+          out.toastHasUndo = !!sr.querySelector('.mn-toast-act');
+          var pre = document.createElement('pre');
+          pre.id = 'diag';
+          pre.textContent = JSON.stringify(out, null, 1);
+          document.body.appendChild(pre);
+          document.title = 'diag ready';
+        }
+      })();
+    </script>
+  </body>
+</html>

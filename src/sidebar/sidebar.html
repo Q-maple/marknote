@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>MarkNote 划线清单</title>
+    <link rel="stylesheet" href="../common/pages.css" />
+    <link rel="stylesheet" href="sidebar.css" />
+  </head>
+  <body>
+    <header class="side-head">
+      <div class="row">
+        <strong class="grow" id="page-title">当前页面划线</strong>
+        <button id="btn-reload" title="重新定位本页划线">↻</button>
+        <button id="btn-index" title="显示 / 隐藏划线序号">#</button>
+        <button id="btn-dash" title="管理所有划线 / 导出">☰</button>
+        <button id="btn-clear" class="danger" title="清空本页所有划线">🗑</button>
+      </div>
+      <div class="muted ellipsis" id="page-url"></div>
+      <div class="row" id="filters">
+        <input id="q" class="grow" placeholder="在本页划线里搜索…" />
+        <select id="color-filter" title="按颜色筛选">
+          <option value="">全部颜色</option>
+        </select>
+      </div>
+      <div class="row wrap" id="stats"></div>
+    </header>
+
+    <main id="list"></main>
+
+    <div class="side-foot muted" id="foot"></div>
+
+    <template id="tpl-ann">
+      <article class="ann">
+        <div class="row">
+          <span class="dot"></span>
+          <span class="grow ann-quote"></span>
+          <button class="mini" data-act="copy" title="复制这条划线">⧉</button>
+          <button class="mini" data-act="note" title="编辑笔记">✎</button>
+          <button class="mini danger" data-act="delete" title="删除">✕</button>
+        </div>
+        <div class="ann-note hidden"></div>
+        <div class="ann-edit hidden">
+          <textarea rows="3" placeholder="写点想法…"></textarea>
+          <div class="row" style="margin-top: 6px">
+            <input class="tag-input grow" placeholder="标签，回车添加，用 / 分多级" />
+            <button class="primary" data-act="save">保存</button>
+          </div>
+          <div class="row wrap tags" style="margin-top: 6px"></div>
+        </div>
+        <div class="ann-meta">
+          <span class="tags row wrap"></span>
+          <span class="grow"></span>
+          <span data-role="time"></span>
+        </div>
+      </article>
+    </template>
+
+    <script src="../common/util.js"></script>
+    <script src="../common/store.js"></script>
+    <script src="sidebar.js"></script>
+  </body>
+</html>

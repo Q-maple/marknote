@@ -1,0 +1,118 @@
+/*
+ * MarkNote — 页面内注入的样式（内容脚本）
+ * 页面里的高亮用 <mark class="mn-hl">；其余界面都放在 shadow DOM 里，不走这份 CSS。
+ */
+
+mark.mn-hl {
+  background: var(--mn-bg, #ffe066);
+  color: inherit;
+  padding: 0.08em 0;
+  border-radius: 2px;
+  box-shadow: inset 0 -0.35em 0 rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: filter 0.12s ease;
+  background-image: none;
+}
+
+mark.mn-hl:hover {
+  filter: brightness(1.06) saturate(1.15);
+}
+
+/* 带笔记的划线：右上角一个小点 */
+mark.mn-hl[data-note='1'] {
+  position: relative;
+}
+
+mark.mn-hl[data-note='1']::after {
+  content: '';
+  position: absolute;
+  top: -0.15em;
+  right: -0.15em;
+  width: 0.42em;
+  height: 0.42em;
+  border-radius: 50%;
+  background: #e8590c;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9);
+  pointer-events: none;
+}
+
+/* 划线序号：用伪元素画，绝不往正文里插节点——插了会改可见文本，定位引擎下次就对不上了。
+   注意 ::after 已经被「有笔记」的小圆点占用，这里只能用 ::before。 */
+mark.mn-hl[data-idx]::before {
+  content: attr(data-idx);
+  display: inline-block;
+  min-width: 1.05em;
+  margin-right: 0.14em;
+  padding: 0 0.1em;
+  border-radius: 0.6em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.62em;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+  vertical-align: 0.34em;
+  color: #fff;
+  background: var(--mn-bg-dark, #334155);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.55);
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* 一条划线跨了 <b> 之类被拆成多段时，只有第一段带号 */
+mark.mn-hl[data-idx-cont]::before {
+  content: none;
+}
+
+/* 被侧边栏选中时闪烁一下 */
+mark.mn-hl.mn-flash {
+  animation: mn-flash 1.1s ease-out 2;
+}
+
+@keyframes mn-flash {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 91, 219, 0);
+  }
+  40% {
+    box-shadow: 0 0 0 3px rgba(59, 91, 219, 0.55);
+  }
+}
+
+/* 隐藏本页所有高亮 */
+html.mn-hide-hl mark.mn-hl {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html.mn-hide-hl mark.mn-hl::after {
+  display: none;
+}
+
+/* 图片标记 */
+img.mn-img-hl {
+  outline: 3px solid #ffb302;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* 「解锁复制」打开时，允许选中所有元素 */
+html.mn-unlock-copy,
+html.mn-unlock-copy body,
+html.mn-unlock-copy * {
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  user-select: text !important;
+}
+
+html.mn-unlock-copy *::selection {
+  background: rgba(59, 91, 219, 0.28);
+}
+
+@media print {
+  mark.mn-hl {
+    background: #ffe066 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

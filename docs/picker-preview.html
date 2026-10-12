@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>MarkNote 取色器预览</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 28px;
+        font: 14px/1.6 -apple-system, "PingFang SC", system-ui, sans-serif;
+        background: #f4f5f8;
+        color: #1f2937;
+      }
+      h1 { font-size: 17px; margin: 0 0 4px; }
+      p { margin: 0 0 18px; opacity: 0.7; font-size: 13px; }
+      .row { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
+      .box {
+        background: #fff; border-radius: 12px; padding: 14px;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1);
+      }
+      .box h2 { font-size: 13px; margin: 0 0 10px; opacity: 0.7; font-weight: 600; }
+      code { background: rgba(59, 91, 219, 0.12); padding: 1px 5px; border-radius: 4px; }
+      #log { margin-top: 18px; font-size: 13px; opacity: 0.8; }
+    </style>
+  </head>
+  <body>
+    <h1>MarkNote 取色器预览</h1>
+    <p>
+      这就是扩展里弹出的那个取色器（<code>src/common/picker.js</code>）：拖色环选色相、拖方块调饱和 / 明暗，
+      也可以直接填 RGB 或 <code>#rrggbb</code>，或点「系统」用操作系统的色轮 / 吸管。
+      调好后点「应用」或「存为常用色」；自定义色鼠标移上去点右上角 <code>×</code>，或直接右键就能删掉。
+    </p>
+
+    <div class="row">
+      <div class="box">
+        <h2>弹出形态（工具条 / 批注层里就是这样）</h2>
+        <div id="host"></div>
+      </div>
+      <div class="box">
+        <h2>操作记录</h2>
+        <div id="log">（还没有操作）</div>
+      </div>
+    </div>
+
+    <script src="../src/common/util.js"></script>
+    <script src="../src/common/picker.js"></script>
+    <script>
+      // 预置两个"常用色"，看看自定义色在色板里的样子
+      MN.setCustomColors(['#3b5bdb', '#0a9396']);
+
+      const log = document.getElementById('log');
+      const lines = [];
+      const say = (t) => {
+        lines.unshift(new Date().toLocaleTimeString() + '  ' + t);
+        log.innerHTML = lines.slice(0, 12).map((l) => '<div>' + l + '</div>').join('');
+      };
+
+      const picker = MN.createColorPicker({
+        value: '#ffe066',
+        onInput: (hex) => say('拖动中：' + hex),
+        onPick: (hex) => say('应用：' + hex),
+        onSave: (hex) => {
+          MN.addCustomColor(hex);
+          say('存为常用色：' + hex + '（现在色板里有 ' + MN.customColors().length + ' 个自定义色）');
+          picker.refresh();
+        },
+        onDelete: (hex) => {
+          MN.removeCustomColor(hex);
+          say('从常用色里删掉：' + hex + '（还剩 ' + MN.customColors().length + ' 个）');
+        },
+        onCancel: () => say('取消')
+      });
+      document.getElementById('host').appendChild(picker.el);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,11 @@
+# macOS
+.DS_Store
+._*
+
+# 构建产物：跑 ./tools/build.sh 重新生成；对外分发的 zip 走 GitHub Releases
+/dist/
+manifest.chrome.json
+*.xpi
+
+# Node（只有测试用的 jsdom 装在这里）
+/node_modules/

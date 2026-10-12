@@ -1,0 +1,103 @@
+.side-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--mn-bg);
+  padding-bottom: 8px;
+  margin: -12px -12px 10px;
+  padding: 12px 12px 8px;
+  border-bottom: 1px solid var(--mn-line);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.side-head input,
+.side-head select {
+  padding: 4px 8px;
+  font-size: 12.5px;
+}
+
+#filters select {
+  width: auto;
+  flex: none;
+}
+
+.ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+button.mini {
+  padding: 1px 6px;
+  border: none;
+  background: none;
+  font-size: 12px;
+  opacity: 0.55;
+  line-height: 1.2;
+}
+
+button.mini:hover {
+  opacity: 1;
+  background: var(--mn-soft);
+}
+
+button.mini.danger:hover {
+  color: var(--mn-danger);
+}
+
+.ann-edit textarea {
+  font-size: 12.5px;
+}
+
+.ann-edit .tag-input {
+  font-size: 12.5px;
+}
+
+.tag {
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--mn-soft);
+  font-size: 11px;
+  color: var(--mn-muted);
+}
+
+.side-foot {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--mn-line);
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.badge-lost {
+  color: var(--mn-muted);
+  font-size: 11px;
+  border: 1px dashed var(--mn-line);
+  border-radius: 999px;
+  padding: 0 6px;
+}
+
+/* 清单里的序号：和网页上那块高亮的编号一致 */
+.ann-idx {
+  flex: none;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: var(--mn-accent, #3b5bdb);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 17px;
+  text-align: center;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+#btn-index[data-on='1'] {
+  background: var(--mn-accent, #3b5bdb);
+  color: #fff;
+  border-color: transparent;
+}

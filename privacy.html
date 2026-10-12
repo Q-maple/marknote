@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MarkNote 隐私政策</title>
+    <style>
+      :root { color-scheme: light dark; }
+      body {
+        margin: 0 auto; padding: 28px 20px 60px; max-width: 780px;
+        font: 14px/1.75 -apple-system, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+        color: #1f2933; background: #fff;
+      }
+      @media (prefers-color-scheme: dark) {
+        body { color: #e5e7eb; background: #1b1d21; }
+        a { color: #8ab4f8; }
+        code { background: #2a2d33; }
+        .hl { background: #2a2d33; border-color: #3a3f47; }
+      }
+      h1 { font-size: 21px; margin: 0 0 6px; }
+      h2 { font-size: 15px; margin: 26px 0 8px; }
+      .meta { color: #6b7280; font-size: 12.5px; margin-bottom: 18px; }
+      .hl { border: 1px solid #e5e7eb; background: #f8f9fa; border-radius: 10px; padding: 12px 14px; }
+      code { background: #f1f3f5; padding: 1px 5px; border-radius: 4px; font-size: 12.5px; }
+      table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 13px; }
+      th, td { border: 1px solid #e5e7eb; padding: 6px 9px; text-align: left; vertical-align: top; }
+      @media (prefers-color-scheme: dark) { th, td { border-color: #3a3f47; } }
+      ul { padding-left: 22px; }
+      li { margin: 3px 0; }
+      footer { margin-top: 34px; color: #6b7280; font-size: 12.5px; }
+    </style>
+  </head>
+  <body>
+    <h1>MarkNote 隐私政策</h1>
+    <div class="meta">版本 1.6.1 ｜ 生效日期 2026-01-01 ｜ 适用：MarkNote 浏览器扩展（Firefox / Chrome / Edge / Brave）</div>
+
+    <div class="hl">
+      一句话：<b>MarkNote 没有服务器、没有账号、没有统计埋点。</b>你划的线只存在你自己的浏览器里；
+      只有你主动点「AI 分析」时，选中的文字才会发给你自己配置的那个接口。
+    </div>
+
+    <h2>一、我们不收集任何数据</h2>
+    <ul>
+      <li><b>没有账号体系</b>：不需要注册登录，也不收集邮箱、手机号等身份信息；</li>
+      <li><b>没有开发者服务器</b>：扩展不会把数据发回给我们，也没有任何中转；</li>
+      <li><b>没有统计分析 / 埋点 / 崩溃上报</b>：不记录你访问了哪些网页、划了多少线、点了哪些按钮；</li>
+      <li><b>没有广告、没有第三方 SDK</b>：安装包里只有 MarkNote 自己的代码。</li>
+    </ul>
+
+    <h2>二、你的数据存在哪里</h2>
+    <ul>
+      <li>高亮、笔记、标签、颜色、设置项全部存在<b>你本机浏览器的 <code>chrome.storage.local</code></b> 里；</li>
+      <li>不会同步到任何服务器；<b>卸载扩展（或移除临时载入的扩展）时浏览器会清空这些数据</b>，想留档请用管理页的「导出 JSON 备份」；</li>
+      <li>导出的文件由你自己保管，注意里面有划线原文和你的笔记。</li>
+    </ul>
+
+    <h2>三、唯一会联网的功能：AI 分析（默认关闭）</h2>
+    <p>只有在<b>你打开了开关 + 自己填了接口和 Key + 手动点了分析</b>时才会联网。发送的内容只有：</p>
+    <table>
+      <tr><th>发送内容</th><th>说明</th></tr>
+      <tr><td>选中的文字（或整页正文）</td><td>取决于面板里选的范围，只在你点分析时发一次</td></tr>
+      <tr><td>你写的提示词</td><td>面板里那句话，可留空</td></tr>
+      <tr><td>模型参数</td><td>模型名、温度、最大条数等</td></tr>
+      <tr>
+        <td>悬浮窗里的对话记录</td>
+        <td>
+          「AI 对话」窗口里每一轮都会把你引用的那段文字 + 到目前为止的对话历史一起发出去（否则模型接不上话）。
+          <b>这段对话只存在内存里</b>：关掉窗口或刷新页面就没了，既不写进划线，也不进导出文件。
+        </td>
+      </tr>
+    </table>
+    <p><b>不会发送</b>：浏览历史、其他网页的内容、你的笔记与标签、除 API Key 之外的任何设置。</p>
+    <ul>
+      <li>数据由你的浏览器<b>直接</b>发给你填的那个接口（默认 <code>https://api.deepseek.com</code>），<b>不经过 MarkNote 开发者的任何服务器</b>，我们不经手、不中转、不留存；</li>
+      <li>对方如何处理这些内容，取决于<b>该服务商自己的隐私政策与服务条款</b>，请只使用你信任的服务商；</li>
+      <li><b>数据出境</b>：如果你把接口地址填成境外服务，内容会传输到境外，请自行评估；</li>
+      <li>API Key 单独存在本机的 <code>aiKey</code> 里，<b>不写进设置项、不会出现在导出的备份文件中</b>，管理页可随时清除；</li>
+      <li><b>悬浮窗对话不落库</b>：MarkNote 不保存对话内容（连本机也不存），关掉窗口即丢弃；它也不会生成任何划线。</li>
+    </ul>
+
+    <h2>四、权限都用在哪</h2>
+    <table>
+      <tr><th>权限</th><th>用途</th></tr>
+      <tr><td><code>storage</code> / <code>unlimitedStorage</code></td><td>在本机存划线、笔记与设置，数量不设上限</td></tr>
+      <tr><td><code>&lt;all_urls&gt;</code></td><td>划线功能需要在你打开的任何网页上工作（注入工具条、绘制高亮、读取你选中的文字）</td></tr>
+      <tr><td><code>tabs</code></td><td>弹窗和侧边栏需要知道当前标签页，才能显示「本页」的划线清单</td></tr>
+      <tr><td><code>contextMenus</code></td><td>右键菜单里的「高亮选中文字」「标记这张图片」等入口</td></tr>
+      <tr><td><code>clipboardWrite</code></td><td>你点「复制」时把文字写进剪贴板</td></tr>
+    </table>
+    <p>扩展不会读取你的表单输入、密码、Cookie，也不会修改网页内容（只有你划线的地方会被加上高亮标记）。</p>
+
+    <h2>五、网站上的版权内容</h2>
+    <p>划线原文来自你访问的网页，版权属于原网站或原作者。MarkNote 只是把这些文字保存在你自己的浏览器里方便你自己查看，请勿把导出内容用于侵犯他人著作权的用途。</p>
+
+    <h2>六、AI 生成的内容</h2>
+    <p>AI 给出的高亮位置与批注<b>由第三方模型生成</b>，可能不准确甚至有误，请自行核对后采用。</p>
+
+    <h2>七、商标声明</h2>
+    <p>MarkNote 是独立开发的扩展，与 DeepSeek（深度求索）、OpenAI 及其他被提及的第三方服务<b>没有隶属、代理或合作关系</b>；文档与界面里出现的第三方名称仅用于说明「兼容哪个接口」。</p>
+
+    <h2>八、关于复制辅助功能</h2>
+    <p>
+      扩展里有一个「允许本页选中复制」的辅助功能，作用范围<b>仅限于你自己的浏览器</b>——当某个网页自己禁用了选中或复制时，
+      让你仍能选中并复制正在看的内容。<b>该功能默认关闭</b>，首次使用会提示你确认；请遵守目标网站的使用条款，
+      不要把它用于批量抓取或转载他人内容。
+    </p>
+
+    <h2>九、未成年人</h2>
+    <p>本扩展不面向未成年人单独提供服务，也不会有意收集未成年人的任何信息（事实上我们不收集任何人的信息）。</p>
+
+    <h2>十、政策变更</h2>
+    <p>政策如有更新会随扩展新版本一起发布，并在 CHANGELOG 里说明；继续使用新版本即视为接受更新后的政策。</p>
+
+    <h2>十一、联系我们</h2>
+    <ul>
+      <li>联系方式：<b>（发布前请把这里替换成你的邮箱）</b></li>
+      <li>本项目地址：<b>（发布前请替换成你的仓库或主页地址）</b></li>
+    </ul>
+
+    <h2>English Summary</h2>
+    <ul>
+      <li><b>We collect nothing.</b> No account, no analytics, no telemetry, no developer server, no third-party SDKs.</li>
+      <li><b>Everything stays on your device</b> in <code>chrome.storage.local</code>; uninstalling removes it.</li>
+      <li><b>The only network feature is optional AI analysis, off by default.</b> It sends only the text you selected (or the page body, if you choose that scope) plus your prompt, directly to the endpoint <b>you</b> configure with <b>your own</b> key. Your key never leaves your machine and is excluded from exports.</li>
+      <li><b>Not affiliated</b> with DeepSeek, OpenAI, or any other third-party service mentioned in the UI. AI output may be wrong — verify it yourself.</li>
+      <li><b>Copy helper</b>: a default-off feature that lets your own browser select and copy text on pages that block it. Please respect the terms of the sites you visit.</li>
+    </ul>
+
+    <footer>
+      本页是随扩展分发的隐私政策副本，与仓库里的 PRIVACY.md 内容一致（两处需同时更新）。<br />
+      Contact: (replace with your email before publishing)
+    </footer>
+  </body>
+</html>

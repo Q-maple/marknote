@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>MarkNote · 管理所有划线</title>
+    <link rel="stylesheet" href="../common/pages.css" />
+    <link rel="stylesheet" href="dashboard.css" />
+  </head>
+  <body>
+    <header class="top">
+      <h1>MarkNote 划线管理</h1>
+      <div class="row wrap" id="stats"></div>
+    </header>
+
+    <section class="card bar">
+      <div class="row wrap">
+        <input id="q" class="grow" placeholder="搜索划线文字、笔记、标签、网址…" />
+        <select id="color" title="按颜色筛选"></select>
+        <select id="site" title="按网站筛选"></select>
+        <select id="template" title="Markdown 导出样式">
+          <option value="quote">Markdown：引用式</option>
+          <option value="list">Markdown：列表式</option>
+        </select>
+      </div>
+      <div class="row wrap" style="margin-top: 8px">
+        <button class="primary" id="export-md">导出 Markdown</button>
+        <button id="copy-md">复制为 Markdown</button>
+        <button id="export-txt">导出纯文本</button>
+        <button id="export-json">导出 JSON 备份</button>
+        <button id="import-json">导入 JSON 备份</button>
+        <input type="file" id="file" accept="application/json,.json" class="hidden" />
+        <span class="grow"></span>
+        <span class="muted" id="sel-info">未选中</span>
+        <button id="select-all">全选过滤结果</button>
+        <button class="danger" id="delete-sel">删除选中</button>
+      </div>
+    </section>
+
+    <div class="layout">
+      <aside class="card tags-panel">
+        <div class="row">
+          <strong class="grow">标签</strong>
+          <button id="clear-tag" class="mini">清除</button>
+        </div>
+        <div id="tag-tree" class="tag-tree"></div>
+      </aside>
+      <main id="list" class="list"></main>
+    </div>
+
+    <details class="card ai-card" id="ai-card">
+      <summary>
+        <strong>AI 分析（第三方接口）</strong>
+        <span class="muted" id="ai-summary">未开启</span>
+      </summary>
+      <div class="ai-form">
+        <p class="muted">
+          填好这里之后，在网页上选中一段文字，点小工具条上的 <b>AI</b>（或右键「用 AI 分析选中文字」、<kbd>Alt+Shift+A</kbd>），
+          AI 会把值得记的地方连同批注一并列出来，你勾选完再写入划线。<br />
+          开启后点「分析」时，会把<b>你选中的那段文字</b>（或整页正文，看你选哪个范围）发到下面这个接口；
+          除此之外不会上传任何内容。<b>API Key 只存在本机的浏览器存储里</b>，不会跟着「导出 JSON 备份」走，也不会发给除这个接口之外的任何地方。
+        </p>
+        <p class="muted">
+          MarkNote 与 DeepSeek、OpenAI 等第三方服务<b>没有隶属或合作关系</b>，这里只是用你自己的账号调用你填的接口；
+          分析结果由第三方模型生成，可能有误，请自行核对。细节见
+          <a href="../../privacy.html" target="_blank" rel="noreferrer">隐私政策</a>。
+        </p>
+        <div class="row wrap">
+          <label class="field grow">
+            <span>API Key</span>
+            <input type="password" id="ai-key" placeholder="sk-…" autocomplete="off" spellcheck="false" />
+          </label>
+          <label class="field grow">
+            <span>接口地址（OpenAI 兼容即可）</span>
+            <input type="text" id="ai-base" placeholder="https://api.deepseek.com" spellcheck="false" />
+          </label>
+        </div>
+        <div class="row wrap">
+          <label class="field"><span>模型</span><input type="text" id="ai-model" spellcheck="false" list="ai-model-list" /></label>
+          <datalist id="ai-model-list"></datalist>
+          <label class="field narrow"><span>最多几处</span><input type="number" id="ai-max" min="1" max="30" /></label>
+          <label class="field narrow"><span>整页正文上限</span><input type="number" id="ai-chars" min="500" max="60000" step="500" /></label>
+          <label class="field check"><input type="checkbox" id="ai-enabled" /><span>打开 AI 分析</span></label>
+          <label class="field check"><input type="checkbox" id="ai-json" /><span>强制 JSON 输出</span></label>
+        </div>
+        <div class="muted" id="ai-models-hint">
+          模型名要跟接口对得上（DeepSeek 接口一般是 <code>deepseek-chat</code>）。
+          不确定就点下面的「拉取可用模型」，它会问 <code>/models</code> 拿到这个接口能用的名字。
+        </div>
+        <div class="row wrap" id="ai-models"></div>
+        <label class="field">
+          <span>默认提示词（在页面上打开 AI 面板时会预填这一段，随时可以改）</span>
+          <textarea id="ai-prompt" rows="2" placeholder="留空就用内置的默认提示词"></textarea>
+        </label>
+        <label class="field">
+          <span>对话默认提示词（打开 AI 对话悬浮窗时预填在输入框里：不动它直接发送就按这句问，一开始打字它就让位）</span>
+          <textarea id="ai-chat-prompt" rows="2" placeholder="留空就用内置的：帮我解释这段文字的意思，并指出其中的重点。"></textarea>
+        </label>
+        <div class="row wrap">
+          <button class="primary" id="ai-save">保存 AI 设置</button>
+          <button id="ai-test">测试连接</button>
+          <button id="ai-list-models">拉取可用模型</button>
+          <button class="danger" id="ai-clear">清除 Key</button>
+          <span class="muted grow" id="ai-status"></span>
+        </div>
+      </div>
+    </details>
+
+    <details class="card" id="disp-card">
+      <summary>
+        <strong>高亮序号</strong>
+        <span class="muted" id="disp-summary">已关闭</span>
+      </summary>
+      <div class="row wrap" style="align-items: center; gap: 16px">
+        <label class="field check"><input type="checkbox" id="disp-index" /><span>在每条高亮前面显示序号（1、2、3…）</span></label>
+        <label class="field">
+          <span>排序方式</span>
+          <select id="disp-mode">
+            <option value="position">按在页面里的位置（从上到下）</option>
+            <option value="order">按创建时间（先划的在前）</option>
+          </select>
+        </label>
+      </div>
+      <p class="muted" style="margin: 8px 0 0">
+        序号是画在高亮上的（不写进正文），只影响显示；侧边栏清单里的编号和网页上的编号一致。
+      </p>
+    </details>
+
+    <details class="card" id="danger-card">
+      <summary>
+        <strong>清空划线</strong>
+        <span class="muted" id="danger-summary">删除全部数据</span>
+      </summary>
+      <p class="muted" style="margin: 0 0 8px">
+        <b>清空全部划线</b>会把所有网站、所有页面的划线一起删掉（本机数据，删了不会同步到别处）。
+        平时只想清理当前页面，用网页右侧工具条 → 清单，或扩展弹窗里的「清空本页划线」。
+      </p>
+      <div class="row wrap">
+        <button class="danger" id="clear-all">清空全部划线</button>
+        <span class="grow muted" id="clear-all-status"></span>
+      </div>
+    </details>
+
+    <template id="tpl-group">
+      <section class="group">
+        <header class="group-head">
+          <input type="checkbox" class="pick-group" />
+          <span class="grow">
+            <a class="group-title" target="_blank" rel="noreferrer"></a>
+            <span class="muted group-url"></span>
+          </span>
+          <span class="muted group-count"></span>
+        </header>
+        <div class="group-body"></div>
+      </section>
+    </template>
+
+    <template id="tpl-ann">
+      <article class="ann">
+        <input type="checkbox" class="pick" />
+        <div class="grow">
+          <div class="ann-quote"></div>
+          <div class="ann-note hidden"></div>
+          <div class="ann-meta">
+            <span class="dot"></span>
+            <span class="tags row wrap"></span>
+            <span class="grow"></span>
+            <span class="time"></span>
+          </div>
+        </div>
+        <span class="row">
+          <button class="mini" data-act="copy">复制</button>
+          <button class="mini danger" data-act="delete">删除</button>
+        </span>
+      </article>
+    </template>
+
+    <script src="../common/util.js"></script>
+    <script src="../common/store.js"></script>
+    <script src="../common/ai.js"></script>
+    <script src="dashboard.js"></script>
+  </body>
+</html>

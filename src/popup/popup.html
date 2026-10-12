@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>MarkNote</title>
+    <link rel="stylesheet" href="../common/pages.css" />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header class="row">
+      <strong class="grow">MarkNote 划线笔记</strong>
+      <span class="muted" id="ver"></span>
+    </header>
+
+    <div class="card" id="page-card">
+      <div class="row">
+        <span class="grow ellipsis" id="page-title">正在读取当前页面…</span>
+      </div>
+      <div class="row wrap" id="page-stats" style="margin-top: 6px"></div>
+    </div>
+
+    <div class="grid">
+      <button id="open-sidebar" class="primary">划线清单</button>
+      <button id="open-dashboard">管理 / 导出</button>
+      <button id="toggle-hl">显示 / 隐藏高亮</button>
+      <button id="toggle-bar">右侧工具条开关</button>
+      <button id="toggle-index">显示 / 隐藏序号</button>
+      <button id="unlock">允许本页选中复制</button>
+      <button id="super-copy">复制选中内容</button>
+      <button id="ai-analyze">AI 分析选中文字</button>
+      <button id="ai-talk">AI 对话选中文字</button>
+      <button id="clear-page" class="danger">清空本页划线</button>
+    </div>
+
+    <div class="card">
+      <div class="muted" style="margin-bottom: 6px">新划线的默认颜色</div>
+      <div class="row wrap" id="colors"></div>
+      <div class="row" style="margin-top: 8px">
+        <button id="add-custom" type="button">＋ 自定义颜色（色环 / RGB）</button>
+      </div>
+      <div id="picker-host" hidden></div>
+      <div class="muted" style="margin: 8px 0 4px">常用自定义色</div>
+      <div class="row wrap" id="custom-colors"></div>
+    </div>
+
+    <footer class="muted">
+      快捷键：Alt+Shift+H 高亮 · Alt+Shift+N 笔记 · Alt+Shift+C 复制 · Alt+Shift+A AI 分析 · Alt+Shift+S 清单<br />
+      划线数据只保存在这台电脑上；只有你自己点「分析」时，才会把选中的文字发给你配置的 AI 接口，
+      生成内容由第三方模型产出、可能有误。详见 <a href="../../privacy.html" target="_blank" rel="noreferrer">隐私政策</a>。
+    </footer>
+
+    <script src="../common/util.js"></script>
+    <script src="../common/picker.js"></script>
+    <script src="../common/store.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>

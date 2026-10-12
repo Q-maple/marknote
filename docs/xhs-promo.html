@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>MarkNote 小红书宣传图</title>
+    <style>
+      /* 小红书封面：1080×1440（3:4）。四张一套，渲染时用 ?only=N 只显示第 N 张。 */
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      :root {
+        --ink: #1f2733;
+        --ink2: #55607a;
+        --yellow: #ffe066;
+        --blue: #3b5bdb;
+        --pink: #ffc9de;
+        --green: #a9f0a0;
+        --purple: #d0bfff;
+        --cream: #fff8ee;
+        --line: #e8e2d6;
+      }
+      html, body { background: #dfe3ea; }
+      body {
+        font: 400 26px/1.5 -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+        color: var(--ink);
+        -webkit-font-smoothing: antialiased;
+      }
+      .page {
+        position: relative;
+        width: 1080px;
+        height: 1440px;
+        overflow: hidden;
+        background: var(--cream);
+        padding: 70px 76px 64px;
+        display: flex;
+        flex-direction: column;
+      }
+      .page + .page { margin-top: 24px; }
+      body[data-only="1"] .page:not([data-p="1"]) { display: none; }
+      body[data-only="2"] .page:not([data-p="2"]) { display: none; }
+      body[data-only="3"] .page:not([data-p="3"]) { display: none; }
+      body[data-only="4"] .page:not([data-p="4"]) { display: none; }
+      body[data-only] { background: #fff; }
+      body[data-only] .page + .page { margin-top: 0; }
+
+      /* 背景装饰：荧光笔痕 */
+      .blob { position: absolute; border-radius: 999px; filter: blur(2px); opacity: .5; z-index: 0; }
+      .b1 { width: 460px; height: 150px; background: var(--yellow); left: -120px; top: -50px; transform: rotate(-8deg); }
+      .b2 { width: 380px; height: 120px; background: var(--pink); right: -110px; bottom: 340px; transform: rotate(6deg); opacity: .42; }
+      .grid {
+        position: absolute; inset: 0; z-index: 0; opacity: .5;
+        background-image: radial-gradient(#e6ddc9 2px, transparent 2px);
+        background-size: 34px 34px;
+      }
+      .page > *:not(.blob):not(.grid) { position: relative; z-index: 1; }
+
+      .kicker {
+        display: inline-flex; align-items: center; gap: 10px;
+        font-size: 25px; font-weight: 700; color: var(--blue);
+        background: #fff; border: 2px solid #d8e0ff; border-radius: 999px;
+        padding: 10px 22px; align-self: flex-start;
+      }
+      .h1 { font-size: 92px; font-weight: 900; line-height: 1.16; letter-spacing: -1px; }
+      .h1 em { font-style: normal; position: relative; white-space: nowrap; }
+      .h1 em::after {
+        content: ""; position: absolute; left: -6px; right: -6px; bottom: 6px; height: 26px;
+        background: var(--yellow); border-radius: 8px; z-index: -1;
+      }
+      .h2 { font-size: 62px; font-weight: 900; line-height: 1.24; }
+      .sub { font-size: 32px; color: var(--ink2); line-height: 1.62; }
+      .sub b { color: var(--ink); }
+      .card {
+        background: #fff; border: 1px solid var(--line); border-radius: 30px;
+        box-shadow: 0 14px 34px rgba(31, 39, 51, .07);
+      }
+      .tags { display: flex; flex-wrap: wrap; gap: 12px; }
+      .tag {
+        font-size: 25px; font-weight: 700; padding: 9px 20px; border-radius: 999px;
+        background: #fff; border: 2px solid var(--line); color: var(--ink2);
+      }
+      .spacer { flex: 1; }
+      .foot { font-size: 25px; color: #8d97a8; display: flex; align-items: center; gap: 14px; }
+      .arrow { font-size: 30px; font-weight: 800; color: var(--blue); }
+
+      /* ---------- 网页示意 ---------- */
+      .browser { overflow: hidden; display: flex; flex-direction: column; }
+      .browser .bar {
+        height: 54px; background: #f2f3f7; border-bottom: 1px solid #e6e8ee;
+        display: flex; align-items: center; gap: 10px; padding: 0 20px;
+      }
+      .dot3 { width: 14px; height: 14px; border-radius: 50%; background: #d7dae3; }
+      .url {
+        flex: 1; margin-left: 8px; height: 30px; border-radius: 999px; background: #fff;
+        border: 1px solid #e6e8ee; font-size: 19px; color: #98a1b3;
+        display: flex; align-items: center; padding: 0 16px;
+      }
+      .browser .body { padding: 28px 32px 32px; }
+      .ptitle { font-size: 30px; font-weight: 800; margin-bottom: 14px; }
+      .pline { font-size: 27px; line-height: 2.05; color: #3c4657; }
+      .hl { background: var(--yellow); border-radius: 4px; padding: 2px 4px; }
+      .hl.g { background: var(--green); }
+      .hl.p { background: var(--pink); }
+      .idx {
+        display: inline-block; min-width: 30px; height: 30px; line-height: 30px; text-align: center;
+        border-radius: 999px; background: #8a6d00; color: #fff; font-size: 19px; font-weight: 700;
+        margin-right: 6px; vertical-align: 3px; padding: 0 6px;
+      }
+      /* ---------- 对话悬浮窗示意 ---------- */
+      .talk { width: 100%; display: flex; flex-direction: column; }
+      .talk .head {
+        display: flex; align-items: center; gap: 12px; padding: 18px 22px;
+        border-bottom: 1px solid var(--line);
+      }
+      .talk .title { font-size: 26px; font-weight: 800; }
+      .pill {
+        font-size: 21px; padding: 5px 14px; border-radius: 999px; background: #eef1ff; color: var(--blue);
+        font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px;
+      }
+      .talk .msgs { padding: 22px; display: flex; flex-direction: column; gap: 16px; }
+      .bub { font-size: 25px; line-height: 1.6; padding: 14px 20px; border-radius: 20px; max-width: 88%; }
+      .bub.me { align-self: flex-end; background: var(--blue); color: #fff; border-bottom-right-radius: 6px; }
+      .bub.ai { align-self: flex-start; background: #f2f4f8; border-bottom-left-radius: 6px; }
+      .talk .input {
+        margin: 0 22px 22px; border: 2px solid #cfd6e4; border-radius: 18px; padding: 14px 18px;
+        font-size: 24px; color: #7b869b; display: flex; align-items: center; justify-content: space-between;
+      }
+      .send { background: var(--blue); color: #fff; font-size: 22px; font-weight: 800; padding: 8px 20px; border-radius: 14px; }
+
+      /* ---------- 四宫格 ---------- */
+      .quad { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+      .qi { padding: 26px 26px 28px; }
+      .qi .em { font-size: 46px; line-height: 1; }
+      .qi .qt { font-size: 33px; font-weight: 900; margin: 12px 0 8px; }
+      .qi .qd { font-size: 24px; color: var(--ink2); line-height: 1.55; }
+      .swatch { display: flex; gap: 8px; margin-top: 14px; }
+      .sw { width: 30px; height: 30px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .1); }
+
+      /* ---------- 清单条目 ---------- */
+      .rows { display: flex; flex-direction: column; gap: 16px; }
+      .row {
+        display: flex; align-items: center; gap: 16px; padding: 20px 24px;
+        font-size: 28px; font-weight: 600;
+      }
+      .row .no {
+        flex: none; width: 46px; height: 46px; border-radius: 50%; background: var(--blue); color: #fff;
+        font-size: 26px; font-weight: 800; display: flex; align-items: center; justify-content: center;
+      }
+      .row .ok { margin-left: auto; color: #2b8a3e; font-weight: 800; font-size: 26px; }
+      .row .no.x { background: #e9ecf2; color: #97a1b3; }
+
+      .cta {
+        background: var(--ink); color: #fff; border-radius: 30px; padding: 30px 34px;
+        display: flex; align-items: center; justify-content: space-between; gap: 20px;
+      }
+      .cta .t1 { font-size: 34px; font-weight: 900; }
+      .cta .t2 { font-size: 24px; color: #c8cfdd; margin-top: 8px; }
+      .cta .kw {
+        flex: none; background: var(--yellow); color: #3a2f00; font-weight: 900; font-size: 30px;
+        padding: 14px 26px; border-radius: 18px;
+      }
+      #diag {
+        position: fixed; left: 0; top: 0; z-index: 99; max-width: 100%;
+        background: #fff; color: #111; font: 14px/1.5 monospace; padding: 8px; white-space: pre-wrap;
+        display: none;
+      }
+      body[data-diag="1"] #diag { display: block; }
+    </style>
+  </head>
+  <body>
+    <pre id="diag"></pre>
+
+    <!-- ============ 1 / 封面 ============ -->
+    <section class="page" data-p="1">
+      <div class="grid"></div>
+      <div class="blob b1"></div>
+      <div class="blob b2"></div>
+      <div class="kicker">🖍 浏览器插件 · 免费 · 不用注册</div>
+      <div style="height: 34px"></div>
+      <h1 class="h1">网页划线，<br />还能顺手<em>问 AI</em></h1>
+      <div style="height: 26px"></div>
+      <p class="sub">
+        选中一句话就能划线、写批注、打标签；<br />
+        划完直接开个<b>悬浮小窗跟 AI 聊这段</b>。
+      </p>
+      <div class="spacer"></div>
+      <div class="card browser">
+        <div class="bar">
+          <span class="dot3"></span><span class="dot3"></span><span class="dot3"></span>
+          <span class="url">https://example.com/article</span>
+        </div>
+        <div class="body">
+          <div class="ptitle">为什么大家开始用网页划线做笔记</div>
+          <p class="pline">
+            <span class="hl"><span class="idx">1</span>划过的句子会被记住</span>，刷新、换设备都在；<br />
+            标签用斜杠分多级，比如 <span class="hl p">技术/前端/性能</span>；<br />
+            清单里还有序号，和网页上的<span class="hl g">编号一一对应</span>。
+          </p>
+        </div>
+      </div>
+      <div style="height: 30px"></div>
+      <div class="tags">
+        <span class="tag">Chrome / Firefox</span>
+        <span class="tag">数据只存本机</span>
+        <span class="tag">中文界面</span>
+        <span class="tag">AI 用你自己的 Key</span>
+      </div>
+      <div style="height: 34px"></div>
+      <div class="foot"><span class="arrow">→</span> 往后翻，4 张图说清它能干什么</div>
+    </section>
+
+    <!-- ============ 2 / 功能四宫格 ============ -->
+    <section class="page" data-p="2">
+      <div class="grid"></div>
+      <div class="blob b1"></div>
+      <div class="kicker">✨ 日常最常用的四件事</div>
+      <div style="height: 30px"></div>
+      <h2 class="h2">划线这件小事，<br />它做得比想象中细</h2>
+      <div style="height: 40px"></div>
+      <div class="quad">
+        <div class="card qi">
+          <div class="em">🖍</div>
+          <div class="qt">5 色 + 自定义颜色</div>
+          <div class="qd">色环、RGB、系统吸管随便调，调好的存成常用色</div>
+          <div class="swatch">
+            <span class="sw" style="background: var(--yellow)"></span>
+            <span class="sw" style="background: var(--green)"></span>
+            <span class="sw" style="background: #a5d8ff"></span>
+            <span class="sw" style="background: var(--pink)"></span>
+            <span class="sw" style="background: var(--purple)"></span>
+            <span class="sw" style="background: #3b5bdb"></span>
+          </div>
+        </div>
+        <div class="card qi">
+          <div class="em">🏷</div>
+          <div class="qt">无限层级标签</div>
+          <div class="qd">用 / 分层，输过一次以后自动补全</div>
+          <div class="tags" style="margin-top: 14px">
+            <span class="tag" style="font-size: 21px; padding: 6px 14px">技术/前端</span>
+            <span class="tag" style="font-size: 21px; padding: 6px 14px">待读</span>
+          </div>
+        </div>
+        <div class="card qi">
+          <div class="em">🔢</div>
+          <div class="qt">划线自动编号</div>
+          <div class="qd">网页上的 1、2、3 和清单里的编号一一对应，长文不再迷路</div>
+        </div>
+        <div class="card qi">
+          <div class="em">🧹</div>
+          <div class="qt">一键清空可撤销</div>
+          <div class="qd">清掉本页划线，9 秒内点「撤销」原样找回</div>
+        </div>
+      </div>
+      <div style="height: 26px"></div>
+      <div class="card" style="padding: 26px 30px">
+        <div style="font-size: 26px; color: var(--ink2); line-height: 1.6">
+          📤 还能整页导出 <b style="color: var(--ink)">Markdown / 纯文本 / JSON 备份</b>，
+          复制走直接丢进 Obsidian、思源、Logseq 都能读。
+        </div>
+      </div>
+      <div class="spacer"></div>
+      <div class="foot"><span class="arrow">→</span> 第 3 张是最新功能：划完直接问 AI</div>
+    </section>
+
+    <!-- ============ 3 / AI 对话 ============ -->
+    <section class="page" data-p="3">
+      <div class="grid"></div>
+      <div class="blob b2"></div>
+      <div class="kicker">🤖 划完这句，直接问它</div>
+      <div style="height: 30px"></div>
+      <h2 class="h2">不切标签页，<br />在旁边跟 AI 聊这段</h2>
+      <div style="height: 24px"></div>
+      <p class="sub">选中文字 → 点「对话」→ 冒出一个可以拖着走的小窗，<b>多轮追问不丢上下文</b>。</p>
+      <div style="height: 36px"></div>
+      <div class="card talk">
+        <div class="head">
+          <span class="title">AI 对话</span>
+          <span class="pill">deepseek-chat ▾</span>
+          <span class="pill" style="background: #f3f4f6; color: #6b7280">「Manifest V3 的扩展」</span>
+        </div>
+        <div class="msgs">
+          <div class="bub me">帮我解释这段文字的意思，并指出其中的重点。</div>
+          <div class="bub ai">
+            这句话说的是：这个扩展跑在 <b>Manifest V3</b> 这套新的浏览器扩展规范上。<br />
+            重点有两个 —— ① 后台从常驻页面变成事件驱动；② 权限要提前声明。
+          </div>
+          <div class="bub me">那它和 V2 最大的区别是什么？</div>
+          <div class="bub ai">一句话：更省内存、更强调隐私，但写法更受限。</div>
+        </div>
+        <div class="input"><span>帮我解释这段文字的意思…</span><span class="send">发送</span></div>
+      </div>
+      <div style="height: 30px"></div>
+      <div class="rows">
+        <div class="card row"><span class="no">✓</span>多轮对话，可以一直追问<span class="ok">不丢上下文</span></div>
+        <div class="card row"><span class="no">✓</span>只聊天，<b>不会给你乱加划线</b><span class="ok">你不是旁观者</span></div>
+        <div class="card row"><span class="no">✓</span>关掉窗口对话就清空<span class="ok">不落库、不导出</span></div>
+      </div>
+      <div class="spacer"></div>
+      <div class="foot"><span class="arrow">→</span> 模型可换：DeepSeek / 豆包（火山方舟）/ 混元 等 OpenAI 兼容接口</div>
+    </section>
+
+    <!-- ============ 4 / 隐私 + 怎么拿 ============ -->
+    <section class="page" data-p="4">
+      <div class="grid"></div>
+      <div class="blob b1"></div>
+      <div class="kicker">🔒 为什么敢让你放心用</div>
+      <div style="height: 30px"></div>
+      <h2 class="h2">不用注册，<br />也没有「云端账号」</h2>
+      <div style="height: 40px"></div>
+      <div class="rows">
+        <div class="card row"><span class="no">1</span>不收集数据：没有埋点、没有统计<span class="ok">真没有</span></div>
+        <div class="card row"><span class="no">2</span>划线只存在你自己的浏览器里<span class="ok">卸载即清空</span></div>
+        <div class="card row"><span class="no">3</span>AI 用你自己的 Key，请求不经过我们<span class="ok">默认关闭</span></div>
+        <div class="card row"><span class="no">4</span>想留档就导出 JSON<span class="ok">随时带走</span></div>
+      </div>
+      <div style="height: 26px"></div>
+      <div class="card" style="padding: 26px 30px">
+        <div style="font-size: 26px; color: var(--ink2); line-height: 1.65">
+          🔐 有独立的隐私政策，把「会联网的唯一功能」「权限用在哪」都写清楚了；
+          不想用 AI 就永远不用打开，插件也不会自己联网。
+        </div>
+      </div>
+      <div class="spacer"></div>
+      <div class="cta">
+        <div>
+          <div class="t1">想要的话，评论区扣「划线」</div>
+          <div class="t2">Chrome / Edge / Firefox 都能装，下载方式和图文步骤放在置顶评论</div>
+        </div>
+        <div class="kw">划线</div>
+      </div>
+      <div style="height: 24px"></div>
+      <div class="foot">💡 学生 / 研究者 / 天天读长文的人，用一次就回不去了</div>
+    </section>
+
+    <script>
+      (function () {
+        var q = new URLSearchParams(location.search);
+        var only = q.get('only');
+        if (only) document.body.setAttribute('data-only', only);
+        if (!q.get('diag')) return;
+        document.body.setAttribute('data-diag', '1');
+
+        /** 逐张量一遍：有没有元素越出画布（我看不到图，只能靠这个保证不裁切/不溢出）。 */
+        function report() {
+          var out = [];
+          document.querySelectorAll('.page').forEach(function (page) {
+            if (only && page.getAttribute('data-p') !== only) return;
+            if (page.offsetWidth === 0) return;
+            var pb = page.getBoundingClientRect();
+            var bad = [];
+            page.querySelectorAll('*').forEach(function (el) {
+              if (el.id === 'diag' || el.classList.contains('blob') || el.classList.contains('grid')) return;
+              var r = el.getBoundingClientRect();
+              if (!r.width || !r.height) return;
+              var over = [];
+              if (r.left < pb.left - 0.5) over.push('左' + Math.round(pb.left - r.left));
+              if (r.top < pb.top - 0.5) over.push('上' + Math.round(pb.top - r.top));
+              if (r.right > pb.right + 0.5) over.push('右' + Math.round(r.right - pb.right));
+              if (r.bottom > pb.bottom + 0.5) over.push('下' + Math.round(r.bottom - pb.bottom));
+              if (over.length) {
+                bad.push((el.className || el.tagName) + ' [' + over.join(',') + ']');
+              }
+              if (el.scrollHeight > el.clientHeight + 2 && getComputedStyle(el).overflow === 'hidden') {
+                bad.push((el.className || el.tagName) + ' [内容被裁 ' + (el.scrollHeight - el.clientHeight) + 'px]');
+              }
+            });
+            out.push({
+              page: page.getAttribute('data-p'),
+              size: Math.round(pb.width) + 'x' + Math.round(pb.height),
+              errors: bad.slice(0, 14),
+              errorCount: bad.length
+            });
+          });
+          var pre = document.getElementById('diag');
+          // 顺手确认字体真的在：万一缺字体会渲染成豆腐块，而我看不到图
+          var fonts = {
+            pingfang: document.fonts.check('900 92px "PingFang SC"'),
+            emoji: document.fonts.check('46px "Apple Color Emoji"'),
+            heiti: document.fonts.check('400 26px "Hiragino Sans GB"')
+          };
+          pre.textContent = JSON.stringify({ fonts: fonts, pages: out }, null, 1);
+        }
+        window.addEventListener('load', function () {
+          setTimeout(report, 120);
+        });
+      })();
+    </script>
+  </body>
+</html>

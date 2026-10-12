@@ -1,0 +1,132 @@
+{
+  "manifest_version": 3,
+  "name": "MarkNote · 网页划线高亮批注",
+  "version": "1.6.1",
+  "description": "免费的网页划线、高亮、批注与笔记工具：多色高亮 + 自定义颜色（色环 / RGB）、可选的第三方 AI（智能标注 / 划线对话悬浮窗，自己填 API Key，默认关闭）、无限层级标签、侧边栏清单、Markdown/JSON 导出。数据默认只保存在本机。",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "marknote-23a68dfb@local.dev",
+      "strict_min_version": "140.0",
+      "data_collection_permissions": {
+        "required": [
+          "websiteContent"
+        ]
+      }
+    },
+    "gecko_android": {
+      "strict_min_version": "142.0"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "96": "icons/icon96.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": [
+    "storage",
+    "unlimitedStorage",
+    "tabs",
+    "contextMenus",
+    "clipboardWrite"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "scripts": [
+      "src/common/ai.js",
+      "src/background/background.js"
+    ]
+  },
+  "action": {
+    "default_title": "MarkNote 划线笔记",
+    "default_popup": "src/popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png"
+    }
+  },
+  "sidebar_action": {
+    "default_title": "MarkNote 划线清单",
+    "default_panel": "src/sidebar/sidebar.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "exclude_matches": [
+        "*://*/*.pdf"
+      ],
+      "js": [
+        "src/common/util.js",
+        "src/common/store.js",
+        "src/common/anchors.js",
+        "src/common/picker.js",
+        "src/common/ai.js",
+        "src/content/content.js"
+      ],
+      "css": [
+        "src/content/content.css"
+      ],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "commands": {
+    "highlight-selection": {
+      "suggested_key": {
+        "default": "Alt+Shift+H"
+      },
+      "description": "高亮当前选中的文字"
+    },
+    "add-note": {
+      "suggested_key": {
+        "default": "Alt+Shift+N"
+      },
+      "description": "给选中的文字加高亮并写笔记"
+    },
+    "super-copy": {
+      "suggested_key": {
+        "default": "Alt+Shift+C"
+      },
+      "description": "复制选中的文字（页面禁止选中/复制时，可在弹窗里允许本页选中复制）"
+    },
+    "toggle-sidebar": {
+      "suggested_key": {
+        "default": "Alt+Shift+S"
+      },
+      "description": "打开/关闭划线清单侧边栏"
+    },
+    "toggle-highlights": {
+      "suggested_key": {
+        "default": "Alt+Shift+X"
+      },
+      "description": "显示/隐藏本页所有高亮"
+    },
+    "ai-analyze": {
+      "suggested_key": {
+        "default": "Alt+Shift+A"
+      },
+      "description": "AI 分析选中的文字（需要先在管理页配置并打开）"
+    }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "icons/*.png"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ]
+}
