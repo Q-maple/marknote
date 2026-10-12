@@ -432,11 +432,11 @@
 
   /** 问后台一件事（chrome 回调风格和 browser Promise 风格都兜住）。 */
   function askBackground(msg) {
-    if (B) return B.runtime.sendMessage(msg).then((r) => r, (e) => ({ ok: false, error: (e && e.message) || String(e) }));
+    if (B) return B.runtime.sendMessage(msg).then((r) => r, (e) => ({ ok: false, error: MN.sendErrorText(e) }));
     return new Promise((resolve) => {
       C.runtime.sendMessage(msg, (r) => {
         const err = C.runtime.lastError;
-        resolve(err ? { ok: false, error: err.message } : r || { ok: false, error: '后台没有响应' });
+        resolve(err ? { ok: false, error: MN.sendErrorText(err) } : r || { ok: false, error: '后台没有响应' });
       });
     });
   }

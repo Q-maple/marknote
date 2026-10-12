@@ -146,6 +146,19 @@ textarea:focus {
   opacity: 0.6;
 }
 
+/* 「此页面未连接插件」这类需要用户动手的提示：用警示色，别和统计数字混成一片 */
+.chip.warn {
+  background: rgba(224, 49, 49, 0.14);
+  color: var(--mn-danger);
+}
+
+@media (prefers-color-scheme: dark) {
+  .chip.warn {
+    background: rgba(224, 49, 49, 0.22);
+    color: #ff8787;
+  }
+}
+
 .dot {
   width: 10px;
   height: 10px;

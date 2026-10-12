@@ -24,7 +24,7 @@
     tpl: document.getElementById('tpl-ann')
   };
 
-  const state = { tabId: null, tabUrl: '', page: null, annotations: [], lost: [], filter: '', color: '', showIndex: false, indexMode: 'position' };
+  const state = { tabId: null, tabUrl: '', page: null, annotations: [], lost: [], filter: '', color: '', showIndex: false, indexMode: 'position', connected: false };
 
   /**
    * 和页面里算的是同一套序号（同一个规则、同一份数据），
@@ -118,6 +118,10 @@
 
     let page = null;
     if (state.tabId) page = await sendToTab({ type: MN.MSG.GET_ANNOTATIONS });
+    // 内容脚本没应答（页面在装 / 更新 / 重新加载插件之前就打开了、PDF、扩展页…）：
+    // 划线照旧从存储里读出来显示，但「定位 / 删除 / 关序号」这些按钮点了不会有反应，
+    // 所以下面要在统计条里说清楚，别让人以为是插件坏了。
+    state.connected = !!(page && Array.isArray(page.annotations));
 
     if (page && Array.isArray(page.annotations)) {
       state.page = page;
@@ -182,7 +186,8 @@
     dom.stats.innerHTML = `
       <span class="chip">${state.annotations.length} 条划线</span>
       <span class="chip">${tagCount.size} 个标签</span>
-      ${state.lost.length ? `<span class="chip">${state.lost.length} 条定位失败</span>` : ''}`;
+      ${state.lost.length ? `<span class="chip">${state.lost.length} 条定位失败</span>` : ''}
+      ${!state.connected && /^https?:/i.test(state.tabUrl) ? '<span class="chip warn">此页面未连接插件 · 刷新（F5）后可用</span>' : ''}`;
     dom.foot.innerHTML = `<span>数据只存在本机</span><span>MarkNote</span>`;
   }
 

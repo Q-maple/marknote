@@ -242,10 +242,11 @@ node test/wiring.test.js       # 清单/页面加载了哪些脚本 + 隐私政�
 > 名称层面要自己再查一次：GitHub 上已有若干同名产品（Android 的 MarkNote、KDE 的 marknote 等），
 > Chrome 应用商店没有公开查询接口。建议上架前查一下中国商标网第 9 / 42 类与 Chrome 商店里的同名情况。
 
-### 常见的两类报错
+### 常见的几类报错
 
 | 报错 | 原因 | 怎么办 |
 | --- | --- | --- |
+| `Could not establish connection. Receiving end does not exist.` | 消息发给了当前标签页，但这一页里没有 MarkNote 的内容脚本。最常见的原因是**页面在装 / 更新 / 重新加载插件之前就打开了**，插件当时没注进去 | **刷新页面（F5）**，再重试。侧栏或弹窗统计条里出现红色的「此页面未连接插件 · 刷新（F5）后可用」就是同一件事。（扩展页、`about:` 页、浏览器商店页面本来就不注入脚本，属于正常情况） |
 | `The supported API model names are …` | 模型名跟这个接口对不上（不同服务商、不同代理叫法不一样，官方是 `deepseek-chat`） | 管理页点一下 **「拉取可用模型」**（它会去问 `/models`），把列出来的名字点一下填进「模型」框，保存即可。测试连接或分析失败时，报错后面会自动附上这个接口支持的模型名 |
 | `Prompt must contain the word 'json' …` | 用了 `response_format: json_object`，接口就要求请求里出现 json 这个词 | 正常情况下不会遇到：分析用的提示词里本来就写了「只输出一个 json 对象」。如果你把「强制 JSON 输出」配给了一个更严格的端点，把这个开关关掉即可（关掉后靠提示词约束，解析层照样能兜住） |
 

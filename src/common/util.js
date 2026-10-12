@@ -432,4 +432,37 @@
     AI_TEST: 'mn:ai-test',     // 管理页 → 后台：测试 API Key 通不通
     AI_MODELS: 'mn:ai-models'  // 管理页 → 后台：拉取这个接口支持的模型名
   };
+
+  /* ------------------------------------------------------- 发消息失败的人话翻译 */
+
+  /**
+   * 把「给后台 / 给页面发消息」失败的浏览器原文翻成能照做的说明。
+   *
+   * 这两个错浏览器只给英文，直接显示在界面上一头雾水：
+   *   - "Could not establish connection. Receiving end does not exist."
+   *     对面没有监听者：发给内容脚本说明这个页面还没注入，
+   *     发给后台说明后台（MV3 的 Service Worker / 事件页）当时不在。
+   *   - "Extension context invalidated."
+   *     插件被重新加载或更新过，而这个页面还在用旧的上下文。
+   *
+   * 两者最常见的原因都是同一件事：页面在装 / 更新 / 重新加载插件之前就打开了，
+   * 所以文案统一指向「刷新页面」，而不是甩一句英文给用户。
+   *
+   * @param {*} err            错误对象、{ message } 或字符串
+   * @param {'bg'|'tab'} where 发给后台（默认）还是发给页面的内容脚本
+   * @returns {string} 可直接显示的中文说明
+   */
+  MN.sendErrorText = function sendErrorText(err, where) {
+    const raw = String((err && err.message) || err || '').trim();
+    if (/Receiving end does not exist|Could not establish connection/i.test(raw)) {
+      if (where === 'tab') {
+        return '这个页面还没有加载 MarkNote（多半是页面在装或更新插件之前就打开了）—— 刷新页面（F5）再试。';
+      }
+      return '联系不上 MarkNote 的后台 —— 多半是插件刚被重新加载过，而这个页面还是旧的。刷新页面（F5）再试；还不行就在扩展管理页里重新加载一次 MarkNote。';
+    }
+    if (/Extension context invalidated/i.test(raw)) {
+      return '插件被重新加载过了，这个页面还在用旧的上下文 —— 刷新页面（F5）就好。';
+    }
+    return raw || '未知错误';
+  };
 })();

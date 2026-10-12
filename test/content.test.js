@@ -1464,6 +1464,27 @@ function check(name, cond, extra) {
       JSON.stringify(sent33[0].history));
   }
 
+  console.log('\n[34] 回归：连不上后台 / 页面时的报错要翻成中文，别甩英文原文');
+  {
+    const dom34 = bootPage(HTML, { data: { settings: { defaultColor: 'yellow' } } });
+    await sleep(40);
+    const T = dom34.window.MN.sendErrorText;
+    // 这就是浏览器在「对面没有监听者」时给的原话，用户看到的也是它
+    const CHROME_ERR = 'Could not establish connection. Receiving end does not exist.';
+
+    const toBg = T(new Error(CHROME_ERR));
+    check('连不上后台 → 说人话并教刷新', /刷新页面/.test(toBg) && !/Receiving end/.test(toBg), toBg);
+
+    const toTab = T(CHROME_ERR, 'tab');
+    check('页面没注入内容脚本 → 指向「页面还没加载 MarkNote」', /还没有加载 MarkNote/.test(toTab) && !/Receiving end/.test(toTab), toTab);
+
+    const invalidated = T({ message: 'Extension context invalidated.' });
+    check('上下文失效 → 说插件被重新加载过', /重新加载过/.test(invalidated) && !/invalidated/.test(invalidated), invalidated);
+
+    check('不认识的报错原样带出来，不吞掉', T(new Error('HTTP 401')) === 'HTTP 401', T(new Error('HTTP 401')));
+    check('空报错有兜底文案', T('') === '未知错误', T(''));
+  }
+
   console.log('\n结果：' + passed + ' 通过 / ' + failed + ' 失败');
   process.exit(failed ? 1 : 0);
 })();

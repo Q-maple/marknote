@@ -70,7 +70,12 @@
       const url = (tab && tab.url) || '';
       const list = url && !url.startsWith('about:') ? await MN.store.forUrl(url) : [];
       dom.title.textContent = (tab && tab.title) || url || '这个页面不支持划线';
-      dom.stats.innerHTML = `<span class="chip">${list.length} 条划线</span>`;
+      // 页面没连上内容脚本（多半是页面在装 / 更新插件之前就打开了）：划线还在库里，
+      // 但下面那些按钮点了不会有任何反应。先说清楚，别让人以为插件坏了。
+      const canConnect = /^https?:/i.test(url);
+      dom.stats.innerHTML =
+        `<span class="chip">${list.length} 条划线</span>` +
+        (canConnect ? '<span class="chip warn">此页面未连接插件 · 刷新（F5）后可用</span>' : '');
     }
     settings = await MN.store.getSettings();
     MN.setCustomColors(settings.customColors);

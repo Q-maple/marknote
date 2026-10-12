@@ -973,12 +973,12 @@
       return await new Promise((resolve) => {
         C.runtime.sendMessage(msg, (res) => {
           const err = C.runtime.lastError;
-          if (err) resolve({ ok: false, error: err.message });
+          if (err) resolve({ ok: false, error: MN.sendErrorText(err) });
           else resolve(res || { ok: false, error: '后台没有响应' });
         });
       });
     } catch (e) {
-      return { ok: false, error: (e && e.message) || String(e) };
+      return { ok: false, error: MN.sendErrorText(e) };
     }
   }
 

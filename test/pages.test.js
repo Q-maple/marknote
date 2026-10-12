@@ -165,6 +165,12 @@ function check(name, cond, extra) {
     check('没有脚本错误', errors.length === 0, errors.join(' | '));
     check('标题是当前页面', /示例文章|当前页面划线/.test(doc.getElementById('page-title').textContent), doc.getElementById('page-title').textContent);
     check('统计显示 2 条划线', doc.getElementById('stats').textContent.includes('2 条划线'), doc.getElementById('stats').textContent.trim());
+    // 测试环境里 tabs.sendMessage 必失败（等价于「页面在装插件之前就打开了」）：
+    // 侧栏不能装作一切正常——「定位 / 删除」按钮这时点了是没有反应的。
+    check('侧栏也提示页面未连接插件', doc.querySelector('#stats .chip.warn') !== null,
+      doc.getElementById('stats').textContent.trim());
+    check('侧栏提示里教人刷新页面', /刷新（F5）/.test(doc.getElementById('stats').textContent),
+      doc.getElementById('stats').textContent.trim());
     check('列出了 2 条划线', doc.querySelectorAll('#list .ann').length === 2, String(doc.querySelectorAll('#list .ann').length));
     check('笔记渲染出来', doc.getElementById('list').textContent.includes('我的想法'));
     check('标签渲染出来', doc.getElementById('list').textContent.includes('技术/前端'));
@@ -202,6 +208,14 @@ function check(name, cond, extra) {
     check('默认色标记在 pink 上', doc.querySelector('#colors .dot[data-active="1"]').dataset.color === 'pink', doc.querySelector('#colors .dot[data-active="1"]') && doc.querySelector('#colors .dot[data-active="1"]').dataset.color);
     check('显示版本号', doc.getElementById('ver').textContent === 'v1.0.0', doc.getElementById('ver').textContent);
     check('显示本页划线数', doc.getElementById('page-stats').textContent.includes('2 条划线'), doc.getElementById('page-stats').textContent.trim());
+    // 测试环境里 tabs.sendMessage 必失败（等价于「页面在装插件之前就打开了」）：
+    // 这时弹窗必须把「点按钮没反应」的原因说出来。
+    check('页面未连接插件时给出可见提示', doc.querySelector('#page-stats .chip.warn') !== null,
+      doc.getElementById('page-stats').textContent.trim());
+    check('提示里教人刷新页面', /刷新（F5）/.test(doc.getElementById('page-stats').textContent),
+      doc.getElementById('page-stats').textContent.trim());
+    check('提示不夹英文原文', !/Receiving end/.test(doc.getElementById('page-stats').textContent),
+      doc.getElementById('page-stats').textContent.trim());
   }
 
   console.log('\n[4] 弹窗：自定义颜色（色环 / RGB / 常用色）');
