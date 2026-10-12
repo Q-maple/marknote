@@ -17,6 +17,7 @@
 - 折叠标题在没选模型时不再显示成 `已开启 · `（尾巴空着），改成 `已开启 · 还没选模型`。
 - 文案同步：`PRIVACY.md` / `privacy.html` 里的联网前提从「你主动打开了开关」改成「开关是开着的（填 Key 会
   自动勾上，随时可取消）」，README 的「AI 与隐私」和入门那段也跟着改口径，避免隐私说明和新行为对不上。
+
 **连不上插件时说人话，别把浏览器的英文原文甩到界面上。**
 
 `Could not establish connection. Receiving end does not exist.` 是 Chrome / Edge 在「消息发出去了、对面没有监听者」
