@@ -1,6 +1,8 @@
 # 更新日志
 
-按 AMO / 商店的版本号来。每个版本都能在 `dist/` 里找到对应的安装包。
+按 AMO / 商店的版本号来。每个版本的安装包都挂在
+[GitHub Releases](https://github.com/Q-maple/marknote/releases) 上
+（`dist/` 是 `tools/build.sh` 的构建产物，不入库）。
 
 ## 1.6.1
 

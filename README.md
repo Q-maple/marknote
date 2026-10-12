@@ -9,6 +9,8 @@ Manifest V3，同时在 **Firefox** 和 **Chrome / Edge / Brave** 上可用。
 
 当前版本 **1.6.1**，各版本改了什么看 [CHANGELOG.md](CHANGELOG.md)。
 
+**仓库**：<https://github.com/Q-maple/marknote> · **下载安装包**：[Releases](https://github.com/Q-maple/marknote/releases/latest)
+
 ---
 
 ## 一、功能
@@ -40,6 +42,10 @@ Manifest V3，同时在 **Firefox** 和 **Chrome / Edge / Brave** 上可用。
 ---
 
 ## 二、安装
+
+> 现成的包在 [Releases](https://github.com/Q-maple/marknote/releases/latest) 里下载：
+> `marknote-firefox.zip`（Firefox）、`marknote-chrome.zip`（Chrome / Edge / Brave）。
+> 不想用打好的包，就 `git clone` 本仓库后跑 `./tools/build.sh` 自己打一份。
 
 ### Firefox
 
